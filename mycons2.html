@@ -1,0 +1,58 @@
+{% extends "index.html" %}
+{% block Page_Header %} My Consultants {% endblock %}
+{% block Content %}
+    <div id='mycons'>
+        <table class='boxtable mycons'>
+            <thead><th>At-A-Glance</th></thead>
+        </table>
+        <table class='boxtable mycons' id='con_at_a_glance'>
+        {% for con in mycons %}
+            <tr>
+                <th> {{ con.name }} </th>
+                <td> {{ con.points }} </td>
+            </tr>
+        {% endfor %}              
+        </table>
+    </div>
+    
+    <div id='mycons2'>
+        <table>
+            <tr><form method='post'>
+                <th width='375' align='left'><select name='myconselect' onchange='this.form.submit()'>
+                {% if selected_con == none %}
+                    <option selected>Select a consultant:</option>
+                    {% for con1 in mycons %}                    
+                    {% if selected_con == con1 %}
+                    <option value='{{ con1.name }}'>{{ con1.name }}</option>
+                    {% else %}
+                    <option value='{{ con1.name }}'>{{ con1.name }}</option>
+                    {% endif %}
+                {% endfor %}
+                {% else %}
+                    <option value=None>Select a consultant:</option>
+                {% for con1 in mycons %}                    
+                    {% if selected_con == con1 %}
+                    <option selected value='{{ con1.name }}'>{{ con1.name }}</option>
+                    {% else %}
+                    <option value='{{ con1.name }}'>{{ con1.name }}</option>
+                    {% endif %}
+                {% endfor %}
+                {% endif %}
+                </select></th>
+                <td width='71' align='right'><noscript><input id='submit' type='submit' value='Submit' /></noscript></td>
+            </form></tr>
+        </table>
+    </div>
+    <table class='boxtable selected-con'>
+        <thead>
+            <th>Date</th>
+            <th>Feedback</th>
+            <th>Notes</th>
+        </thead>
+    </table>
+    <div id='current_con_info' class='table-border selected-con'>
+        <table class='boxtable selected-con'>
+            {{ con_info_box }}
+        </table>
+    </div>
+{% endblock %}

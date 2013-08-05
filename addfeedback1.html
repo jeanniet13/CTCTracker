@@ -1,0 +1,27 @@
+{% extends "index.html" %}
+{% block Page_Header %} Add Feedback {% endblock %}
+{% block Content %}
+    <form id='inputform' method='post'>
+      <table id='input'>
+        <tr><th>Consultant</th>
+          <td><select name='con_netid'>
+          {% for con in conlist %}
+            <option value='{{ con.netid }}'>{{ con.name }}</option>
+          {% endfor %}
+          </select></td>          
+        </tr>
+        <tr><th>Feedback</th>
+          <td><select name='feedbacktype'>
+          {% for pt in pointlist %}
+            <option value='{{ pt.type }}'>{{ pt.type }}</option>
+          {% endfor %}
+          </select></td>
+        </tr><tr></tr><tr></tr><tr></tr><tr></tr><tr></tr>
+        <tr><th>Notes</th>
+          <td>(Comments will be seen by consultants)<br>
+          <textarea name='notes' cols='20' rows='4'></textarea></td>
+        </tr>
+      </table>
+      <input id='submit' type='submit' value='Submit'>
+    </form>
+{% endblock %}

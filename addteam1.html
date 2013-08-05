@@ -1,0 +1,12 @@
+{% extends "index.html" %}
+{% block Page_Header %} Add Teams {% endblock %}
+{% block Content %}
+    <form id='team-in' method='post'> 
+        <table id='input'>
+            <tr><th>Team Number: </th>
+            <td><input type='text' name='in_team'></input></td>
+            </tr>
+        </table>
+        <input type='submit'/>
+    </form>
+{% endblock %}

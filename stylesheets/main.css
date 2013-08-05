@@ -1,0 +1,318 @@
+
+/************ tables on all of the pages *********************************/
+.boxtable {
+	background: white;
+	width: 600px;
+	border-collapse: collapse;
+	border-radius: 5px;
+	text-align: left;
+	color: #520063;
+	table-layout: fixed;
+}	
+.boxtable thead {
+	border: 1px outset;
+	background: #520063;
+	color: white;
+	position:relative; 
+	top: expression(this.offsetParent.scrollTop); 
+}
+
+
+.boxtable tr:nth-child(even) {
+  	background-color: #e8e8e8;
+}
+
+/* defines scrolling part of the table */
+.table-border {
+	width: 620px;
+	height: 300px;
+	overflow-y: auto;
+}
+
+
+    
+
+/********************************************** TEAM POINTS ************************************************/
+
+#teamstandings
+{
+	/*margin-left: 175px;*/
+	margin-left: auto;
+	margin-right: auto;
+	margin-top: 50px;
+	padding: 15px;
+	text-align: left;
+	border: 1px solid #520063;
+	border-radius: 30px;
+	width: 400px;
+	height: 200px;
+	background-color: #e8e8e8;
+	color: #520063;
+	font-size: x-large;
+}
+	
+
+/********************************************** TEAM SUMMARY ************************************************/
+
+
+/********************************************** MY POINTS ************************************************/
+
+#points {
+	float: right;
+	color: #520063;
+	margin: 5px;
+	font-weight: bold;
+}
+
+/********************************************** POINT VALUES ************************************************/
+
+/********************************************** MY INFO ************************************************/
+
+/********************************************** MyCons ************************************************/
+
+#mycons 
+{
+	padding: 0px;
+	position: relative;
+	top: 0px;
+	float: left;
+
+}
+
+.mycons {
+	
+	width: 130px;
+	max-height: 150px;
+	overflow-y: scroll;
+	table-layout:auto;
+
+}
+
+.selected-con {
+	width: 450px;
+	float: right;
+	max-height: 280px;
+}
+
+/*
+#current_con_info
+{
+	float: right;
+	width: 425px;
+	max-height: 300px;
+}*/
+
+#mycon_select_form 
+{
+	padding: 5px;
+	background-color: #520063;
+	color: #e6e6e6;
+	float: left;
+	width: 135px;
+	height: 100px;
+	position: fixed;
+	top: 300px;
+	
+}
+
+#mycon_select_form select{
+	width: 130px;
+}
+
+#myconselect
+{
+	width: 150px;
+	float: left;
+	
+}
+
+#mycons2 {
+    padding-left:10px;
+    position: relative;
+    top: -3px;
+    float: right;
+}
+
+#mycons2 select {
+    float: left;
+    padding: 2px;
+    font-weight: bold;
+    background-color: #520063;
+    color: white;
+    border: 1px inset;
+    box-sizing: border-box;
+    width: 375px;
+}
+
+#mycons2 table {
+    width: 450px;
+    position: relative;
+    border-collapse: collapse;    
+}
+
+#mycons th {
+    float: left;
+    width: 100%
+}   
+
+#mycons2 td {
+    float: right;   
+}
+
+
+
+/********************************************** ALL FEEDBACK ************************************************/
+/*
+#allfeedback {
+	
+	text-align: left;
+	overflow-y: scroll;
+	width: 600px;
+	max-height: 300px;
+
+}
+
+th, td { border-bottom: 1px solid #000 }*/
+
+
+
+/********************************************** INPUT FORM ************************************************/
+/* inputfeedback.html */
+form {    
+	color: #520063;
+    float: left;
+}
+
+select {
+	float: left;
+}
+
+
+textarea {
+	resize: none;
+	width: 500px;
+	height: 100px;
+}
+/*
+#submit {
+	float: right;
+
+}
+*/
+label {
+    display:inline-block;
+    width: 100px;
+    margin-right: 15px;
+    text-align:left;
+}
+
+th {
+    text-align:left;
+}
+/********************************************** Training games ************************************************/
+
+
+/*****************************************************************************************************/
+/*************************************** ALL-SITE FORMATTING *****************************************/
+/*****************************************************************************************************/
+/* Infobox headers */
+h1 {
+	color: #e8e8e8;
+	text-align: center;
+	font-size: 16pt;
+	font-decoration: underline;
+	background: #520063; /* for non-css3 browsers */
+	background: -webkit-gradient(linear, left top, left bottom, from(8B7B8B), to(#520063)); /* for webkit browsers */
+	border-radius: 10px;
+	text-shadow: 1px 1px 1px #888888;
+}	
+
+#header {
+	width: 780px;
+	height: 15px;
+	padding: 15px;
+	text-align: right;
+	border-top-right-radius:20px;
+	border-top-left-radius:20px;
+	border-bottom-right-radius:20px;
+    color: white;
+}
+
+.shiny {background: #520063; 
+	background: -webkit-gradient(linear, left top, left bottom, from(8B7B8B), to(#520063)); /* for webkit browsers */}
+
+#infobox {
+	color: #e8e8e8;
+	width: 600px;
+	height: 400px;
+	padding: 10px;
+	float: left;
+
+}
+
+#infobox a{
+    color:black;
+}
+
+.frames {background-color: #520063;}
+
+
+
+* {
+	font-family: Trebuchet MS;
+	font-size: 14px;
+	line-height: 150%;
+}
+
+p {
+    color:black;
+}
+
+/********************************************** LINKS ************************************************/
+/* Removing bullets from links */
+#links li {
+    list-style-type: none;
+    
+}
+
+#links ul {
+    text-align:left;
+    position: relative;
+    left: -15px;
+    top: -25px;
+}
+
+a {
+	text-decoration: none; 
+	color: #e8e8e8;
+}
+
+a:hover {
+	text-decoration: none; 
+	color: #D8BFD8;
+
+}
+
+
+/* links bar */
+#links {
+    padding: 10px 10px;
+	background-color: #520063;
+	color: #e8e8e8;
+	width: 150px;
+	float: left;
+	border-bottom-left-radius:20px;
+	border-bottom-right-radius:20px;
+}
+
+/* link headers */
+h3 {color: #E6E6E6;}
+
+
+/***************************************** MEETSITE MAIN PAGE FEED ******************************************/
+#ms-infobox {
+	width: 525px;
+	height: 400px;
+	margin-left: auto;
+	margin-right: auto;
+}

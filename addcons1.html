@@ -1,0 +1,29 @@
+{% extends "index.html" %}
+{% block Page_Header %} Add Consultants {% endblock %}
+{% block Content %}
+	<form id='con-in' method='post'>
+        <table id='input' class='boxtable'>
+            <tr><th> NetID: </th>
+                <td><input type='text' name='in_netID'></input></td>
+            <tr><th>Name: </th>
+                <td><input type='text' name='in_name'></input></td>
+            <tr><th>Position: </th>
+                <td><select name='in_pos'>
+                {% for pos in positions %}        
+                    <option value='{{ pos[0] }}'>{{ pos[1] }}</option>
+                {% endfor %}
+                </select></td>        
+            <tr><th>Team: </th>
+                <td><select name='in_team'>
+                {% for team in teamlist %}
+                    <option value='{{ team.team }}'>Team {{ team.team }}</option>
+                {% endfor %}
+                </select></td></tr>                    
+            <tr><th>Lead Con: </th>
+                <td><input type='text' name='in_conleader'></input></td></tr>
+            <tr><th>@u account name: </th>
+                <td><input type='text' name='in_username'></input>@u.northwestern.edu</td></tr>
+        </table>
+        <input type='submit'/>
+	</form>
+{% endblock %}

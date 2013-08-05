@@ -1,0 +1,15 @@
+{% extends "index.html" %}
+{% block Page_Header %} Add Point Types {% endblock %}
+{% block Content %}
+    <form id='pt-in' method='post'> 
+        <table id='input'>
+            <tr><th>Feedback Title: </th>
+                <td><input type='text' name='in_pointtype'></input></td>
+            </tr>
+            <tr><th>Point Value: </th>
+                <td><input type='text' name='in_pointvalue'></input></td>
+            </tr>
+        </table>
+        <input type='submit'/>
+    </form>
+{% endblock %}

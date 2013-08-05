@@ -1,0 +1,38 @@
+{% extends "index.html" %}
+{% block Page_Header %} Add Team Points {% endblock %}
+{% block Content %}
+    <form id='team-points-input' method='post'>
+      <table>
+        <tr><th>Team</th>
+          <td><select name='team_number'>
+          {% for team in teamlist %}
+            <option value='{{ team.team }}'>Team {{ team.team }}</option>
+          {% endfor %}
+          </select></td>          
+        </tr>
+        <tr><th>Points</th>
+          <td><input type='text' name='team_points'></td>
+        </tr>        
+        <tr><th>Notes</th>
+          <td><textarea name='notes' cols='20' rows='4'></textarea></td>
+        </tr>
+        <tr><th><input type='submit'/></th></tr>
+      </table>
+      
+      <table class='boxtable'>
+        <thead><td>History</td></thead>
+      </table>
+      <div class='table-border'>
+        <table id='training_points' class='boxtable'>
+          {% for point in teamfeedbacks %}
+            <tr>
+              <td> {{ point.timestamp }} </td>
+              <td> Team {{ point.team }} </td>
+              <td> {{ point.points_earned }} </td>
+              <td> {{ point.notes }} </td>
+            </tr>
+          {% endfor %}
+        </table>
+      </div>
+    </form>
+{% endblock %}

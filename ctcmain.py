@@ -253,7 +253,7 @@ def get_my_feedback(self,con):
         for point in points:
             if point.type == feedback.point_type:
                 something += "<tr><td>" + str(feedback.timestamp) + "</td><td>" + feedback.point_type + "</td><td>" + feedback.notes + "</td><td>" + str(point.value) + "</td></tr>"
-    return something        
+    return something
     
 def map_feedback_to_point(feedback):
     feedback_type = feedback.point_type
@@ -410,8 +410,9 @@ class TeamPoints(webapp2.RequestHandler):
             totalcons = len([con for con in cons if (con.team==team.team and con.position != 'lc' and con.position != 'ctcadmin')])
             average = 0
             if totalcons != 0:
-                average = (team.points)/totalcons
+                average = 100*(team.points)/totalcons
                 average *= 15
+                average /= 100
                 average += teampoints
             allaverages.append((team.team,average))
             

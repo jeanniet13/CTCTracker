@@ -172,6 +172,7 @@ def recalculate_team_points():
         team.put()
     update_teams()
 '''
+'''
 def recalculate_team_points():
     clear_team_points()
     cons = get_cons()
@@ -180,6 +181,19 @@ def recalculate_team_points():
         team.points += con.points
         team.put()
         update_teams()
+'''        
+def recalculate_team_points():
+    clear_team_points()
+    teams = get_teams()
+    cons = get_cons()
+    tpoints = [0 for i in teams] #0 the list to hold temporary team points
+    for con in cons: #add up team points
+        team = map_con_to_team(con)
+        tpoints[team.team-1] += con.points
+    for team in teams: #update team entity with new total points
+        team.points = tpoints[team.team-1]
+        team.put()
+    update_teams() #refresh cache
    
 def clear_feedback_history():
     feedbacks = get_feedbacks()
@@ -196,12 +210,14 @@ def clear_team_points():
     for team in teams:
         team.points = 0
         team.put()
+    update_teams()    
 
 def clear_con_points():
     cons = get_cons()
     for con in cons:
         con.points = 0
-        con.put()            
+        con.put()
+    update_cons()
     
 ### The equivalent code can be found in mypoints.html, should the developer decide that it's more clear to split the HTML generation from the code.
 ### When using the equivalent code, make sure to add feedbacks and points as inputs to the template.    
@@ -655,7 +671,6 @@ class AddTeamPoints(webapp2.RequestHandler):
         }
         write_page(self, '', '', template_values, 'addteampoints.html')
 
-
 class AddFeedback(webapp2.RequestHandler):
     def get(self):
         if check_lc(self):
@@ -682,24 +697,24 @@ class AddFeedback(webapp2.RequestHandler):
         feedback_value = map_feedback_to_point(feedback)
         con = map_netid_to_con(one)
         if con is not False:  
-           con.points += feedback_value
-           con.put()
-           team = map_con_to_team(con)
-        team.points += feedback_value
-        team.put()
-        update_cons()
-        update_teams()
-        update_feedbacks()
-        success = True
-        conlist = get_cons()
-        conlist = sorted(conlist, key=lambda con:con.netid)
-        pointlist = get_points()
-        pointlist = sorted(pointlist, key=lambda point:-point.value)
-        template_values = {
-            'conlist': conlist,
-            'pointlist': pointlist,
-            'success': success,
-        }
+            con.points += feedback_value
+            con.put()
+            team = map_con_to_team(con)
+            team.points += feedback_value
+            team.put()
+            update_cons()
+            update_teams()
+            update_feedbacks()
+            success = True
+            conlist = get_cons()
+            conlist = sorted(conlist, key=lambda con:con.netid)
+            pointlist = get_points()
+            pointlist = sorted(pointlist, key=lambda point:-point.value)
+            template_values = {
+                'conlist': conlist,
+                'pointlist': pointlist,
+                'success': success,
+            }
         write_page(self, '', '', template_values, 'addfeedback.html')      
 
 class Utilities(webapp2.RequestHandler):

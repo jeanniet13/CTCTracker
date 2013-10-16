@@ -181,8 +181,8 @@ def recalculate_team_points():
         team.points += con.points
         team.put()
         update_teams()
-'''        
-def recalculate_team_points():
+'''
+def recalculate_team_points(): #requires that team # values start at 1 and be consecutive
     clear_team_points()
     teams = get_teams()
     cons = get_cons()
@@ -194,12 +194,31 @@ def recalculate_team_points():
         team.points = tpoints[team.team-1]
         team.put()
     update_teams() #refresh cache
-   
+
+def recalculate_con_points(): #requires testing/debug
+    clear_con_points()
+    cons = get_cons()
+    feedbacks = get_feedbacks()
+    cpoints = [[con.netid, con.points] for con in cons]
+    for feedback in feedbacks: #go through feedbacks and sum up points per con in array
+        con = map_feedback_to_con(feedback)
+        for i in cpoints:
+            if i[0] == con.netid: #find appropriate element in list to update
+                i[1] += map_feedback_to_point(feedback)
+                break
+    for con in cons: #go through cons and update database
+        for i in cpoints: #find the correct point value for each con
+            if i[0] == con.netid:
+                con.points = i[1]
+                con.put()
+                break
+    update_cons() #refresh cache
+
 def clear_feedback_history():
     feedbacks = get_feedbacks()
     for feedback in feedbacks:
         feedback.key.delete()
-        
+
 def clear_teamfeedback_history():
     teamfeedbacks = get_teamfeedbacks()
     for feedback in teamfeedbacks:
@@ -733,7 +752,8 @@ class Utilities(webapp2.RequestHandler):
         three = cgi.escape(self.request.get('clear_teampoints_true'))
         four = cgi.escape(self.request.get('clear_conpoints_true'))
         five = cgi.escape(self.request.get('recalc_teampoints'))
-        six = cgi.escape(self.request.get('clear_memcache_true'))
+        six = cgi.escape(self.request.get('recalc_conpoints'))
+        seven = cgi.escape(self.request.get('clear_memcache_true'))
         something = ''
         if one == 'on':
             clear_feedback_history()
@@ -745,17 +765,17 @@ class Utilities(webapp2.RequestHandler):
             something += '<p>Team Feedbacks historycleared.</p>'
         if three == 'on':
             clear_team_points()
-            update_teams()
             something += '<p>Team points cleared.</p>'
         if four == 'on':
             clear_con_points()
-            update_cons()
             something += '<p>Consultant points cleared.</p>'
         if five == 'on':
             recalculate_team_points()
-            update_teams()
             something += '<p>Team points recalculated.</p>'
         if six == 'on':
+            recalculate_con_points()
+            something += '<p>Con points recalculated.</p>'
+        if seven == 'on':
             if memcache.flush_all():
                 something += '<p>Memcache cleared.</p>'
             else:

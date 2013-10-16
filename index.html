@@ -3,36 +3,38 @@
 <html>
   <head>
     <link type="text/css" rel="stylesheet" href="/stylesheets/main.css" />
+    <title>{% block Title %}{% endblock %}</title>
   </head>
   
   <body>
     <div id='header' class='frames shiny'> {{ user.name }} </div>
     <div id='links' class='frames'>
       <ul>
-        <li><a href = '/'> Home </a></li>
-        <li><a href = 'teampoints'> Team Standings </a> </li>
-        <li><a href = 'mypoints'> My Points </a></li>
-        <li><a href = 'myteam'> My Team </a></li>
-        <li><a href = 'pointvalues'> Point Values </a> </li>
+        <li><a href = '/'>Home</a></li>
+        <li><a href = 'teampoints'>Team Standings</a></li>
+        <li><a href = 'mypoints'>My Points</a></li>
+        <li><a href = 'myteam'>My Team</a></li>
+        <li><a href = 'pointvalues'>Point Values</a></li>
 
        {% if user.position == 'lc' or user.position == 'ctcadmin' or user.position == 'trainer' or admin %}
             <h3> LC Tools </h3> 
-            <li> <a href='mycons'> My Consultants</a> </li>
-            <li> <a href='allfeedback'> All Feedback</a> </li>
-            <li> <a href='conrank'> All Consultant Points</a> </li>
+            <li><a href='mycons'>My Consultants</a></li>
+            <li><a href='allfeedback'>All Feedback</a></li>
+            <li><a href='conrank'>Consultant Standings</a></li>
        {% endif %}
        {% if user.position == 'trainer' or user.position == 'ctcadmin' or admin %}
             <h3> Trainer Tools </h3>
-            <li><a href='addteampoints'> Add Team Points </a></li>
-            <li><a href='addfeedback'> Add Feedback </a></li>
+            <li><a href='addteampoints'>Add Team Points</a></li>
+            <li><a href='addfeedback'>Add Feedback</a></li>
        {% endif %}
        {% if user.position == 'ctcadmin' or admin %}
             <h3> CTC Admin </h3>
-            <li> <a href='addcons'>Add Consultants</a> </li>
-            <li> <a href='addpoints'>Add Point Types</a> </li>
+            <li><a href='allcons'>All Consultants</a></li>
+            <li><a href='addcons'>Add Consultants</a></li>
+            <li><a href='addpoints'>Add Point Types</a></li>
             <li><a href='addteam'>Add Team</a></li>
             <br>
-            <li><a href='clearcache'>Clear Memcache</a></li>
+            <li><a href='utilities'>Utilities</a></li>
        {% endif %}
         <br>
         <li><a href='{{ url|safe }}'>{{ Logout }}</a></li>
@@ -40,8 +42,8 @@
     </div>
     
     <div id='infobox'>
-        <h1> {{ Page_Header }} {% block Page_Header %}{% endblock %}</h1>
-        {{ Content }} {% block Content %}{% endblock %}
+        <h1> {{ Page_Header }}{% block Page_Header %}{% endblock %}</h1>
+        {{ Content }}{% block Content %}{% endblock %}
     </div>
     
   </body>

@@ -1,0 +1,17 @@
+{% extends "index.html" %}
+{% block Title %} My Team {% endblock %}
+{% block Page_Header %} Team {{ team.team }} {% endblock %}
+{% block Content %}
+    <table class='boxtable'><thead>
+        <td>Consultant</td>
+        <td>NetID</td>
+    </thead></table>
+    <div class='table-border'><table class='boxtable'>
+    {% for member in members %}
+        <tr>
+            <th>{{ member.name }}</th>
+            <td>{{ member.netid }}</td>
+        </tr>
+    {% endfor %}
+    </table></div>
+{% endblock %}

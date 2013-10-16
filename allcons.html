@@ -1,27 +1,14 @@
 {% extends "index.html" %}
-{% block Page_Header %} My Consultants {% endblock %}
+{% block Title %} All Consultants {% endblock %}
+{% block Page_Header %} All Consultants {% endblock %}
 {% block Content %}
-    <div id='mycons'>
-        <table class='boxtable mycons'>
-            <thead><th>At-A-Glance</th></thead>
-        </table>
-        <table class='boxtable mycons' id='con_at_a_glance'>
-        {% for con in mycons %}
-            <tr>
-                <th> {{ con.name }} </th>
-                <td> {{ con.points }} </td>
-            </tr>
-        {% endfor %}              
-        </table>
-    </div>
-    
-    <div id='mycons2'>
+    <div id='allcons'>
         <table>
             <tr><form method='post'>
-                <th width='375' align='left'><select name='myconselect' onchange='this.form.submit()'>
+                <th width='575' align='left'><select name='allconselect' onchange='this.form.submit()'>
                 {% if selected_con == none %}
                     <option selected>Select a consultant:</option>
-                    {% for con1 in mycons %}                    
+                    {% for con1 in allcons %}                    
                     {% if selected_con == con1 %}
                     <option value='{{ con1.name }}'>{{ con1.name }}</option>
                     {% else %}
@@ -30,7 +17,7 @@
                 {% endfor %}
                 {% else %}
                     <option value=None>Select a consultant:</option>
-                {% for con1 in mycons %}                    
+                {% for con1 in allcons %}                    
                     {% if selected_con == con1 %}
                     <option selected value='{{ con1.name }}'>{{ con1.name }}</option>
                     {% else %}
@@ -43,7 +30,7 @@
             </form></tr>
         </table>
     </div>
-    <table class='boxtable selected-con'>
+    <table class='boxtable'>
         <thead>
             <th>Date</th>
             <th>Feedback</th>
@@ -51,9 +38,12 @@
             <th>Point Value</th>
         </thead>
     </table>
-    <div id='current_con_info' class='table-border selected-con'>
-        <table class='boxtable selected-con'>
+    <div class='table-border'><table class='boxtable'>
             {{ con_info_box }}
-        </table>
-    </div>
+    </table></div>
+    {% if selected_con != none %}
+    <div id='points'>Total: {{ selected_con.points }}</div>
+    {% else %}
+    <div id='points'>Total: 0</div>
+    {% endif %}
 {% endblock %}

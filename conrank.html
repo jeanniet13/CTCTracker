@@ -1,0 +1,19 @@
+{% extends "index.html" %}
+{% block Title %} Consultant Ranking {% endblock %}
+{% block Page_Header %} Consultant Ranking {% endblock %}
+{% block Content %}
+    <table class='boxtable'>
+        <thead>
+            <td>Consultant</td>
+            <td>Total Points</td>
+        </thead>
+    </table>
+    <div class='table-border' id='allfeedback'><table class='boxtable' id='allfeedback2'>
+    {% for con in cons %}
+        <tr>
+            <td>{{ con.name }}</td>
+            <td>{{ con.points }}</td>
+        </tr>
+    {% endfor %}
+    </table></div>
+{% endblock %}

@@ -1,0 +1,27 @@
+{% extends "index.html" %}
+{% block Page_Header %} My Points {% endblock %}
+{% block Content %}
+    {% if con != false %}
+        <table class='boxtable'><thead>
+            <td>Timestamp</td>
+            <td>Type of Feedback</td>
+            <td>Notes</td>
+            <td>Point Contribution</td>
+        </thead></table>
+        <div class='table-border'><table class='boxtable'>
+        {% for feedback in feedbacks %}
+            {% for point in points %}
+                {% if point.type == feedback.point_type %}
+            <tr>
+                <td>{{ feedback.timestamp }}</td>
+                <td>{{ feedback.point_type }}</td>
+                <td>{{ feedback.notes }}</td>
+                <td>{{ point.value }}</td>
+            </tr>
+                {% endif %}
+            {% endfor %}
+        {% endfor %}
+        </table></div>
+        <div id='points'>Total: {{ con.points }}</div>
+    {% endif %}
+{% endblock %}

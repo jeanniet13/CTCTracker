@@ -1,0 +1,27 @@
+{% extends "index.html" %}
+{% block Title %} All Feedback {% endblock %}
+{% block Page_Header %} All Feedback {% endblock %}
+{% block Content %}
+    <table class='boxtable'>
+        <thead>
+            <td>Date</td>
+            <td>Consultant</td>
+            <td>Type of Feedback</td>
+            <td>Notes</td>
+        </thead>
+    </table>
+    <div class='table-border' id='allfeedback'><table class='boxtable' id='allfeedback2'>
+    {% for feedback in feedbacks %}
+        {% for con in cons %}
+            {% if con.netid == feedback.con_netid %}
+        <tr id='{{ feedback.con_netid }}'>
+            <td>{{ feedback.timestamp }}</td>
+            <td>{{ con.name }}</td>
+            <td>{{ feedback.point_type }}</td>
+            <td>{{ feedback.notes }}</td>
+            {% endif%}
+        {% endfor %}
+    {% endfor %}
+        </tr>
+    </table></div>    
+{% endblock %}

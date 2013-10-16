@@ -44,7 +44,7 @@
 	text-align: left;
 	border: 1px solid #520063;
 	border-radius: 30px;
-	width: 400px;
+	width: 250px;
 	height: 200px;
 	background-color: #e8e8e8;
 	color: #520063;
@@ -58,10 +58,15 @@
 /********************************************** MY POINTS ************************************************/
 
 #points {
-	float: right;
+	clear: both;
+    text-align: right;
 	color: #520063;
 	margin: 5px;
 	font-weight: bold;
+}
+
+#extra h2 {
+    color:#520063;
 }
 
 /********************************************** POINT VALUES ************************************************/
@@ -159,8 +164,34 @@
     float: right;   
 }
 
+/* All Consultants */
+#allcons {
+    padding-left:10px;
+    position: relative;
+    top: -3px;
+    float: right;
+}
 
+#allcons select {
+    float: left;
+    padding: 2px;
+    font-weight: bold;
+    background-color: #520063;
+    color: white;
+    border: 1px inset;
+    box-sizing: border-box;
+    width: 525px;
+}
 
+#allcons table {
+    width: 450px;
+    position: relative;
+    border-collapse: collapse;    
+}
+
+#allcons td {
+    float: right;   
+}
 /********************************************** ALL FEEDBACK ************************************************/
 /*
 #allfeedback {
@@ -247,7 +278,6 @@ h1 {
 	height: 400px;
 	padding: 10px;
 	float: left;
-
 }
 
 #infobox a{
@@ -276,7 +306,7 @@ p {
 }
 
 #links ul {
-    text-align:left;
+    text-align: left;
     position: relative;
     left: -15px;
     top: -25px;
@@ -296,10 +326,9 @@ a:hover {
 
 /* links bar */
 #links {
-    padding: 10px 10px;
+    padding: 0px;
 	background-color: #520063;
 	color: #e8e8e8;
-	width: 150px;
 	float: left;
 	border-bottom-left-radius:20px;
 	border-bottom-right-radius:20px;
@@ -308,7 +337,11 @@ a:hover {
 /* link headers */
 h3 {color: #E6E6E6;}
 
-
+#utilinks ul,li {
+    list-style-position: none;
+    list-style-type:none;
+    margin:0;
+}
 /***************************************** MEETSITE MAIN PAGE FEED ******************************************/
 #ms-infobox {
 	width: 525px;

@@ -1,0 +1,17 @@
+{% extends "index.html" %}
+{% block Title %} Team Standings {% endblock %}
+{% block Page_Header %} Team Standings {% endblock %}
+{% block Content %}
+    <table id='teamstandings' cellpadding='10'>
+        <tr>
+            <th>Team</th>
+            <th>Points</th>
+        </tr>
+        <tr>
+        {% for average in allaverages %}
+            <th>Team {{ average[0] }}</th>
+            <td>{{ average[1] }}</td>
+        </tr>
+        {% endfor %}        
+    </table>
+{% endblock %}

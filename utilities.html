@@ -1,0 +1,31 @@
+{% extends "index.html" %}
+{% block Page_Header %} Utilities {% endblock %}
+{% block Content %}
+    {% if success == true %}
+    {{ Success_Message }}
+    {% endif %}
+    <div id='utilinks'>
+        <form method='post' onsubmit="return confirm('Do you really want to clear the selected data? This action will permanently delete or clear the data from the database.');">        
+            <dl>
+                <dt><input type='checkbox' name='clear_feedback_true'>Clear Feedback History</input></dt>
+                <dd>Remove all the feedbacks entered in the database.</dd>
+                
+                <dt><input type='checkbox' name='clear_teamfeedback_true'>Clear Team Feedback History</input></dt>
+                <dd>Remove all team feedbacks entered in the database.</dd>
+                
+                <dt><input type='checkbox' name='clear_teampoints_true'>Clear Team Points</input></dt>
+                <dd>Reset the points for all teams in the database back to zero.</dd>
+                
+                <dt><input type='checkbox' name='clear_conpoints_true'>Clear Consultant Points</input></dt>
+                <dd>Reset the points for all consultants in the database back to zero.</dd>
+                
+                <dt><input type='checkbox' name='recalc_teampoints'>Recalculate Team Points</input></dt>
+                <dd>Recalculates the points for all the teams in the database.</dd>
+                
+                <dt><input type='checkbox' name='clear_memcache'>Clear Memcache</input></dt>
+                <dd>Resets Memcache to clear stale data.</dd>
+            </dl>
+            <input type='submit'/>
+        </form>
+    </div>
+{% endblock %}

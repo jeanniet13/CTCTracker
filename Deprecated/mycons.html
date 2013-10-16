@@ -18,28 +18,16 @@
     <div id='mycons2'>
         <table>
             <tr><form method='post'>
-                <th width='375' align='left'><select name='myconselect' onchange='this.form.submit()'>
-                {% if selected_con == none %}
-                    <option selected>Select a consultant:</option>
-                    {% for con1 in mycons %}                    
-                    {% if selected_con == con1 %}
-                    <option value='{{ con1.name }}'>{{ con1.name }}</option>
-                    {% else %}
-                    <option value='{{ con1.name }}'>{{ con1.name }}</option>
-                    {% endif %}
-                {% endfor %}
-                {% else %}
-                    <option value=None>Select a consultant:</option>
-                {% for con1 in mycons %}                    
-                    {% if selected_con == con1 %}
+                <th width='375' align='left'><select name='myconselect'>
+                {% for con1 in mycons %}     
+                    {% if con1 == selected_con %}
                     <option selected value='{{ con1.name }}'>{{ con1.name }}</option>
                     {% else %}
                     <option value='{{ con1.name }}'>{{ con1.name }}</option>
                     {% endif %}
                 {% endfor %}
-                {% endif %}
                 </select></th>
-                <td width='71' align='right'><noscript><input id='submit' type='submit' value='Submit' /></noscript></td>
+                <td width='71' align='right'><input id='submit' type='submit' value='Submit' /></td>
             </form></tr>
         </table>
     </div>
@@ -48,7 +36,6 @@
             <th>Date</th>
             <th>Feedback</th>
             <th>Notes</th>
-            <th>Point Value</th>
         </thead>
     </table>
     <div id='current_con_info' class='table-border selected-con'>

@@ -1,13 +1,13 @@
 import os
 import urllib
 import cgi
+import logging
 
 from google.appengine.api import users
 from google.appengine.api import memcache
 from google.appengine.ext import ndb
-from google.appengine.datastore import entity_pb
 
-from time import sleep
+import datetime
 
 import jinja2
 import webapp2
@@ -34,10 +34,7 @@ def write_page(self, heading, content, template_values={}, template='index.html'
     template = JINJA_ENVIRONMENT.get_template(template)
     self.response.write(template.render(template_values))
   
-  
-### Serializing functions ###
-### See <http://blog.notdot.net/2009/9/Efficient-model-memcaching> for serializing reference ###
-### See <http://dylanv.org/2012/08/22/a-hitchhikers-guide-to-upgrading-app-engine-models-to-ndb/> for DB to NDB conversion reference ###
+
 def serialize_entities(models):
     if models is None:
         return None
@@ -53,39 +50,6 @@ def deserialize_entities(data):
         return ndb.ModelAdapter().pb_to_entity(entity_pb.EntityProto(data))
     else:
         return [ndb.ModelAdapter().pb_to_entity(entity_pb.EntityProto(x)) for x in data]
-        
-        
-### CLASSES (NDB.MODEL) ###        
-class Consultant(ndb.Model):
-    netid = ndb.StringProperty()
-    name = ndb.StringProperty()
-    position = ndb.StringProperty()
-    team = ndb.IntegerProperty()
-    lc = ndb.StringProperty()
-    username = ndb.StringProperty()
-    points = ndb.IntegerProperty()    
-
-class Feedback(ndb.Model):
-    timestamp = ndb.DateProperty(auto_now_add=True)
-    con_netid = ndb.StringProperty()
-    point_type = ndb.StringProperty()
-    #recorder = ndb.StringProperty()
-    notes = ndb.TextProperty()
-    
-class Point(ndb.Model):
-    type = ndb.StringProperty()
-    value = ndb.IntegerProperty()
-    
-class TeamFeedback(ndb.Model):
-    timestamp = ndb.DateProperty(auto_now_add=True)
-    team = ndb.IntegerProperty()
-    points_earned = ndb.IntegerProperty()
-    notes = ndb.TextProperty()
-    
-class Team(ndb.Model):
-    team = ndb.IntegerProperty()
-    points = ndb.IntegerProperty()
-        
 
 ### HELPER FUNCTIONS ###
 def get_cons():
@@ -93,126 +57,47 @@ def get_cons():
     if not cons:
         cons = Consultant.query()
         memcache.set("Consultant", serialize_entities(cons))
-        return cons
-    return cons
- 
-def update_cons():
-    cons = Consultant.query()
-    memcache.set("Consultant", serialize_entities(cons))
         
 def get_teams():
     teams = deserialize_entities(memcache.get("Team"))
     if not teams:
         teams = Team.query()
         memcache.set("Team", serialize_entities(teams))
-        return teams
-    return teams
-
-def update_teams():
-    teams = Team.query()
-    memcache.set("Team", serialize_entities(teams))
-        
+     
 def get_points():
     points = deserialize_entities(memcache.get("Point"))
     if not points:
         points = Point.query()
         memcache.set("Point", serialize_entities(points))
-        return points
-    return points
 
-def update_points():
-    points = Point.query()
-    memcache.set("Point", serialize_entities(points))
-    
 def get_feedbacks():
     feedbacks = deserialize_entities(memcache.get("Feedback"))
     if not feedbacks:
         feedbacks = Feedback.query()
         memcache.set("Feedback", serialize_entities(feedbacks))
-        return feedbacks
-    return feedbacks
-    
-def update_feedbacks():
-    feedbacks = Feedback.query()
-    memcache.set("Feedback", serialize_entities(feedbacks))
         
 def get_teamfeedbacks():
     teamfeedbacks = deserialize_entities(memcache.get("TeamFeedback"))
     if not teamfeedbacks:
         teamfeedbacks = TeamFeedback.query()
         memcache.set("TeamFeedback", serialize_entities(teamfeedbacks))
-        return teamfeedbacks
-    return teamfeedbacks
-    
-def update_teamfeedbacks():
-    teamfeedbacks = TeamFeedback.query()
-    memcache.set("TeamFeedback", serialize_entities(teamfeedbacks))
     
 def get_position(self):
     user = users.get_current_user()
     cons = get_cons()
-    #cons = cons.filter(Consultant.username==str(user.nickname()))
-    cons = [con for con in cons if con.username==str(user.nickname())]
+    cons = cons.filter(Consultant.username==str(user.nickname()))
     mypos = 'none'
     for each in cons:
         if each.username == user.nickname():
             mypos = each.position
     return mypos    
-'''
-def recalculate_team_points():
-    clear_team_points()
-    feedbacks = get_feedbacks()
-    teams = get_teams()
-    cons = get_cons()
-    for feedback in feedbacks:
-        point = map_feedback_to_point(feedback)
-        con = map_netid_to_con(feedback.con_netid)
-        team = map_con_to_team(con)
-        team.points += point
-        team.put()
-    update_teams()
-'''
-def recalculate_team_points():
-    clear_team_points()
-    cons = get_cons()
-    for con in cons:
-        team = map_con_to_team(con)
-        team.points += con.points
-        team.put()
-        update_teams()
-   
-def clear_feedback_history():
-    feedbacks = get_feedbacks()
-    for feedback in feedbacks:
-        feedback.key.delete()
-        
-def clear_teamfeedback_history():
-    teamfeedbacks = get_teamfeedbacks()
-    for feedback in teamfeedbacks:
-        feedback.key.delete()
-
-def clear_team_points():
-    teams = get_teams()
-    for team in teams:
-        team.points = 0
-        team.put()
-
-def clear_con_points():
-    cons = get_cons()
-    for con in cons:
-        con.points = 0
-        con.put()            
     
-### The equivalent code can be found in mypoints.html, should the developer decide that it's more clear to split the HTML generation from the code.
-### When using the equivalent code, make sure to add feedbacks and points as inputs to the template.    
 def get_my_feedback(self,con):
     something = ''
     if con is None:
         return something
     feedbacks = get_feedbacks()
-    #feedbacks = feedbacks.filter(Feedback.con_netid==str(con.netid))
-    feedbacks = [feedback for feedback in feedbacks if feedback.con_netid==str(con.netid)]
-    feedbacks = sorted(feedbacks, key=lambda feedback:feedback.timestamp)
+    feedbacks = feedbacks.filter(Feedback.con_netid==str(con.netid))
     points = get_points()    
     for feedback in feedbacks:        
         for point in points:
@@ -226,28 +111,7 @@ def map_feedback_to_point(feedback):
     for point in point_types:
         if point.type == feedback_type:
             return point.value
-    return False
-    
-def map_feedback_to_con(feedback):
-    allcons = get_cons()
-    for con in allcons:
-        if feedback.con_netid == str(con.netid):            
-            return con
-    return False   
-
-def map_feedback_to_team(feedback,con):
-    allteams = get_teams()
-    for team in allteams:
-        if con.team == team.team:
-            return team
-    return False
-    
-def map_teamfeedback_to_team(teamfeedback):
-    allteams = get_teams()
-    for team in allteams:
-        if teamfeedback.team == team.team:
-            return team
-    return False
+    return 0
 
 def map_netid_to_con(netid):
     allcons = get_cons()
@@ -277,7 +141,6 @@ def map_user_to_con(self):
     for each in allcons:
         if each.username == user.nickname():
             con = each
-            return con
     return con
     
 def check_lc(self):
@@ -303,10 +166,11 @@ def check_admin(self):
 ### ALL OF THE PAGES AND THEIR CLASSES AND THEIR RELATED DEFS ###    
 class MainPage(webapp2.RequestHandler):
     def get(self):
-        if users.get_current_user():
+        if users.get_current_user() is not None:
             con = map_user_to_con(self)
             admin = check_lc(self)
             if con:
+                con = map_user_to_con(self)
                 greeting = "<p>Herro"
                 greeting += ", " + str(con.name) + "</p>"
                 write_page(self, "Home", greeting)
@@ -322,14 +186,10 @@ class MyPoints(webapp2.RequestHandler):
     def get(self):
         con = map_user_to_con(self)
         feedbacks = get_feedbacks()
-        user = users.get_current_user()
-        nick = user.nickname()
-        #feedbacks = feedbacks.filter(Feedback.con_netid==str(con.netid))
-        feedbacks = [feedback for feedback in feedbacks if feedback.con_netid==str(con.netid)]
+        feedbacks = feedbacks.filter(Feedback.con_netid==str(con.netid))
         points = get_points()
         con_info_box = get_my_feedback(self,con)
         template_values = {
-            'nick':nick,
             'con':con,
             'feedbacks':feedbacks,
             'points':points,
@@ -342,43 +202,26 @@ class MyTeam(webapp2.RequestHandler):
         con = map_user_to_con(self)
         team = map_con_to_team(con)
         members = get_cons()
-        #members = members.filter(Consultant.team==team.team)
-        members = [con for con in members if con.team==team.team]
-        #members = members.order(Consultant.netid)        
-        members = sorted(members, key=lambda con:con.netid)
+        members = members.filter(Consultant.team==team.team)
+        members = members.order(Consultant.netid)        
         template_values = {
             'team':team,
             'members':members,
         }
-        write_page(self, '', '', template_values, 'myteam.html')        
- 
-class PointValues(webapp2.RequestHandler):
-    def get(self):
-        points = get_points()
-        #points = points.order(-Point.value) 
-        points = sorted(points, key=lambda point:-point.value)
-        template_values = {
-            'points':points,
-        }
-        write_page(self, '', '', template_values, 'pointtable.html')
+        write_page(self, '', '', template_values, 'myteam.html')
     
 class TeamPoints(webapp2.RequestHandler):
     def get(self):
         allaverages=[]
         teams = get_teams()
-        #teams = teams.order(Team.team)
-        teams = sorted(teams, key=lambda team:team.team)
-        teamfeedbacks = get_teamfeedbacks()
-        teampoints = sum([team.points_earned for team in teamfeedbacks])
+        teams = teams.order(Team.team)
         cons = get_cons()
         for team in teams:
-            totalcons = len([con for con in cons if (con.team==team.team and con.position != 'lc' and con.position != 'ctcadmin')])
+            totalcons = len([con for con in cons if con.team==team.team])
             average = 0
             if totalcons != 0:
-                average = (team.points)/totalcons
-                average *= 15
-                average += teampoints
-            allaverages.append((team.team,average))
+                average = team.points/totalcons
+            allaverages.append((team.team,team.points,average))
             
         template_values = {
             'allaverages':allaverages,
@@ -387,11 +230,10 @@ class TeamPoints(webapp2.RequestHandler):
     
 class MyCons(webapp2.RequestHandler):
     def get(self):
-        if check_lc(self) and len(get_cons()) > 0:
+        if check_lc(self) and get_cons().count() > 0:
             me = map_user_to_con(self)
             allcons = get_cons()
-            #mycons = allcons.filter(Consultant.lc==me.netid)
-            mycons = [con for con in allcons if con.lc==me.netid]
+            mycons = allcons.filter(Consultant.lc==me.netid)
             selected_con = None
             con_info_box = get_my_feedback(self, selected_con)
             template_values = {
@@ -399,7 +241,7 @@ class MyCons(webapp2.RequestHandler):
                 'selected_con':selected_con,
                 'con_info_box':con_info_box,
             }
-            write_page(self, '', '', template_values, 'mycons.html')
+            write_page(self, '', '', template_values, 'mycons2.html')
         elif check_lc(self) and get_cons().count() == 0:
             write_page(self, "Error 404", "<p>Whoops! Looks like there's nothing in the database >.<</p>")
         else:
@@ -409,8 +251,7 @@ class MyCons(webapp2.RequestHandler):
         selected_con = cgi.escape(self.request.get('myconselect'))
         me = map_user_to_con(self)
         allcons = get_cons()
-        #mycons = allcons.filter(Consultant.lc==me.netid)
-        mycons = [con for con in allcons if con.lc==me.netid]
+        mycons = allcons.filter(Consultant.lc==me.netid)
         if selected_con != 'None':
             mapped_con = map_name_to_con(selected_con)            
             con_info_box = get_my_feedback(self, mapped_con)
@@ -422,14 +263,13 @@ class MyCons(webapp2.RequestHandler):
             'selected_con':mapped_con,
             'con_info_box':con_info_box,
         }  
-        write_page(self, '', '', template_values, 'mycons.html')
+        write_page(self, '', '', template_values, 'mycons2.html')
   
 class ConRank(webapp2.RequestHandler):
     def get(self):
         if check_lc(self):
             cons = get_cons()
-            #cons = cons.order(-Consultant.points)
-            cons = sorted(cons, key=lambda con:-con.points)
+            cons = cons.order(-Consultant.points)
             template_values = {
                 'cons':cons,
             }
@@ -441,10 +281,9 @@ class ConRank(webapp2.RequestHandler):
 #for the CTC Admin, this is an extension of MyCons. All consultants are viewable.
 class AllCons(webapp2.RequestHandler):
     def get(self):
-        if check_lc(self) and len(get_cons()) > 0:
+        if check_lc(self) and get_cons().count() > 0:
             allcons = get_cons()
-            #allcons = allcons.order(-Consultant.points)
-            allcons = sorted(allcons, key=lambda con:-con.points)
+            allcons = allcons.order(-Consultant.points)
             selected_con = None
             con_info_box = get_my_feedback(self, selected_con)
             template_values = {
@@ -478,13 +317,11 @@ class AllFeedback(webapp2.RequestHandler):
     def get(self):
         if check_lc(self):
             feedbacks = get_feedbacks()
-            #feedbacks = feedbacks.order(Feedback.timestamp)
-            feedbacks = sorted(feedbacks, key=lambda feedback:feedback.timestamp, reverse=True)
-            conlist = get_cons()
-            conlist = sorted(conlist, key=lambda con:con.netid)
+            feedbacks = feedbacks.order(Feedback.timestamp)
+            cons = get_cons()
             template_values = {
                 'feedbacks':feedbacks,
-                'cons':conlist,
+                'cons':cons,
             }
             write_page(self, '', '', template_values, 'allfeedback.html')
         else:
@@ -495,15 +332,14 @@ class AddCons(webapp2.RequestHandler):
         if check_admin(self):
             positions = [('ctcadmin','CTC Admin'), ('lc','Lead Consultant'), ('srcon','Senior Consultant'), ('con','Consultant'), ('ascon','Associate Consultant')]
             teamlist = get_teams()
-            #teamlist = teamlist.order(Team.team)
-            teamlist = sorted(teamlist, key=lambda team:team.team)
+            teamlist = teamlist.order(Team.team)
             success = False
             template_values = {
                 'positions': positions,
                 'teamlist': teamlist,
                 'success': success,
             }
-            write_page(self, '', '', template_values, 'addcons.html')
+            write_page(self, '', '', template_values, 'addcons1.html')
         else:
             write_page(self, "Error 401", "<p>Forbidden. Go away.</p>") 
     def post(self):
@@ -526,19 +362,17 @@ class AddCons(webapp2.RequestHandler):
         if check is False:
             con = Consultant(netid=one, name=two, position=three, team=four, lc=five, username=six, points=0)
             con.put()
-            #sleep(3)
-            update_cons()
+            
             positions = [('ctcadmin','CTC Admin'), ('lc','Lead Consultant'), ('srcon','Senior Consultant'), ('con','Consultant'), ('ascon','Associate Consultant')]
             teamlist = get_teams()
-            #teamlist = teamlist.order(Team.team)
-            teamlist = sorted(teamlist, key=lambda team:team.team)
+            teamlist = teamlist.order(Team.team)
             success = True
             template_values = {
                 'positions': positions,
                 'teamlist': teamlist,
                 'success': success,
             }
-            write_page(self, '', '', template_values, 'addcons.html')
+            write_page(self, '', '', template_values, 'addcons1.html')
             #write_page(self, "Consultant Added", "<p><a href='addcons'>Continue</a></p>")
         else:
             write_page(self, "Error", "<p>This consultant already exists.</p><p><a href='addcons'>Continue</a></p>")
@@ -550,7 +384,7 @@ class AddPoints(webapp2.RequestHandler):
             template_values = {
                 'success':success,
             }
-            write_page(self, '', '', template_values, 'addpoints.html')
+            write_page(self, '', '', template_values, 'addpoints1.html')
         else:
             self.response.out.write("Forbidden. Go away.")
     def post(self):
@@ -568,12 +402,11 @@ class AddPoints(webapp2.RequestHandler):
         if check is False:
             point = Point(type=one, value=two)
             point.put()
-            update_points()
             success = True
             template_values = {
                 'success':success,
             }
-            write_page(self, '', '', template_values, 'addpoints.html')
+            write_page(self, '', '', template_values, 'addpoints1.html')
             #write_page(self, "Points Added", "<p><a href='addpoints'>Continue</a></p>")
         else:
             write_page(self, "Error", "<p>This point type already exists.</p><p><a href='addpoints'>Continue</a></p>")
@@ -585,7 +418,7 @@ class AddTeam(webapp2.RequestHandler):
             template_values = {
                 'success':success,
             }
-            write_page(self, '', '', template_values, 'addteam.html')   
+            write_page(self, '', '', template_values, 'addteam1.html')   
         else:
             write_page(self, "Error 401", "<p>Forbidden. Go away.</p>") 
     def post(self):
@@ -599,12 +432,11 @@ class AddTeam(webapp2.RequestHandler):
         if check is False:            
             team = Team(team=one, points=0)
             team.put()
-            update_teams()
             success = True
             template_values = {
                 'success':success,
             }
-            write_page(self, '', '', template_values, 'addteam.html')
+            write_page(self, '', '', template_values, 'addteam1.html')
             #write_page(self, "Team Added", "<p><a href='addteam'>Continue</a></p>")
         else:
             write_page(self, "Error", "<p>This team already exists.</p><p><a href='addteam'>Continue</a></p>")
@@ -613,8 +445,7 @@ class AddTeamPoints(webapp2.RequestHandler):
     def get(self):
         if check_lc(self):
             teamlist = get_teams()
-            #teamlist = teamlist.order(Team.team)
-            teamlist = sorted(teamlist, key=lambda team:team.team)
+            teamlist = teamlist.order(Team.team)
             teamfeedbacks = get_teamfeedbacks()
             success = False
             template_values = {
@@ -622,7 +453,7 @@ class AddTeamPoints(webapp2.RequestHandler):
                 'teamfeedbacks':teamfeedbacks,
                 'success': success,
             }
-            write_page(self, '', '', template_values, 'addteampoints.html')
+            write_page(self, '', '', template_values, 'addteampoints1.html')
         else:
             write_page(self, "Error 401", "<p>Forbidden. Go away.</p>")  
     def post(self):
@@ -631,45 +462,44 @@ class AddTeamPoints(webapp2.RequestHandler):
         three = cgi.escape(self.request.get('notes'))
         teamfeedback = TeamFeedback(team=one,points_earned=two,notes=three)
         teamfeedback.put()
-        update_teamfeedbacks()
-        #team = get_teams()
-        #team = team.filter(Team.team==one)
-        '''
-        team = [x for x in team if x.team==one]
+        team = get_teams()
+        team = team.filter(Team.team==one)
         for t in team:
             t.points += two
             t.put()
-        update_teams()
-        '''
         #write_page(self, "Team Points Added", "<p><a href='addteampoints'>Continue</a></p>")  
         teamlist = get_teams()
-        #teamlist = teamlist.order(Team.team)
-        teamlist = sorted(teamlist, key=lambda team:team.team)
+        teamlist = teamlist.order(Team.team)
         teamfeedbacks = get_teamfeedbacks()
-        #update_teamfeedbacks()
         success = True
         template_values = {
             'teamlist': teamlist,
             'teamfeedbacks':teamfeedbacks,
             'success': success,
         }
-        write_page(self, '', '', template_values, 'addteampoints.html')
-
+        write_page(self, '', '', template_values, 'addteampoints1.html')
+ 
+class PointValues(webapp2.RequestHandler):
+    def get(self):
+        points = get_points()
+        points = points.order(-Point.value)
+        template_values = {
+            'points':points,
+        }
+        write_page(self, '', '', template_values, 'pointtable.html')
 
 class AddFeedback(webapp2.RequestHandler):
     def get(self):
         if check_lc(self):
             conlist = get_cons()
-            conlist = sorted(conlist, key=lambda con:con.netid)
             pointlist = get_points()
-            pointlist = sorted(pointlist, key=lambda point:-point.value)
             success = False
             template_values = {
                 'conlist': conlist,
                 'pointlist': pointlist,
                 'success': success,
             }
-            write_page(self, '', '', template_values, 'addfeedback.html')
+            write_page(self, '', '', template_values, 'addfeedback1.html')
         else:
             write_page(self, "Error 401", "<p>Forbidden. Go away.</p>")  
     def post(self):
@@ -687,72 +517,16 @@ class AddFeedback(webapp2.RequestHandler):
            team = map_con_to_team(con)
         team.points += feedback_value
         team.put()
-        update_cons()
-        update_teams()
-        update_feedbacks()
         success = True
         conlist = get_cons()
-        conlist = sorted(conlist, key=lambda con:con.netid)
         pointlist = get_points()
-        pointlist = sorted(pointlist, key=lambda point:-point.value)
         template_values = {
             'conlist': conlist,
             'pointlist': pointlist,
             'success': success,
         }
-        write_page(self, '', '', template_values, 'addfeedback.html')      
+        write_page(self, '', '', template_values, 'addfeedback1.html')      
 
-class Utilities(webapp2.RequestHandler):
-    def get(self):
-        if check_admin(self):
-            success = False
-            template_values = {
-                'success':success,
-            }
-            write_page(self, '', '', template_values, 'utilities.html')   
-        else:
-            write_page(self, "Error 401", "<p>Forbidden. Go away.</p>") 
-    def post(self):
-        one = cgi.escape(self.request.get('clear_feedback_true'))
-        two = cgi.escape(self.request.get('clear_teamfeedback_true'))
-        three = cgi.escape(self.request.get('clear_teampoints_true'))
-        four = cgi.escape(self.request.get('clear_conpoints_true'))
-        five = cgi.escape(self.request.get('recalc_teampoints'))
-        six = cgi.escape(self.request.get('clear_memcache_true'))
-        something = ''
-        if one == 'on':
-            clear_feedback_history()
-            update_feedbacks()
-            something += "<p>Feedback history cleared.</p>"
-        if two == 'on':
-            clear_teamfeedback_history()
-            update_teamfeedbacks()
-            something += '<p>Team Feedbacks historycleared.</p>'
-        if three == 'on':
-            clear_team_points()
-            update_teams()
-            something += '<p>Team points cleared.</p>'
-        if four == 'on':
-            clear_con_points()
-            update_cons()
-            something += '<p>Consultant points cleared.</p>'
-        if five == 'on':
-            recalculate_team_points()
-            update_teams()
-            something += '<p>Team points recalculated.</p>'
-        if six == 'on':
-            if memcache.flush_all():
-                something += '<p>Memcache cleared.</p>'
-            else:
-                something += '<p>Memcache operation failed.</p>'
-        success = True
-        template_values = {
-            'success':success,
-            'Success_Message':something,
-        }
-        write_page(self, '', '', template_values, 'utilities.html')
-
-            
 class ClearCache(webapp2.RequestHandler):
     def get(self):
         if check_admin(self):
@@ -762,6 +536,37 @@ class ClearCache(webapp2.RequestHandler):
                 write_page(self, "Operation failed", "<p>The cache clear failed. Better go find out why!</p>")           
         else:
             write_page(self, "Error 401", "<p>Forbidden. Go away.</p>")
+
+### CLASSES (NDB.MODEL) ###        
+class Consultant(ndb.Model):
+    netid = ndb.StringProperty()
+    name = ndb.StringProperty()
+    position = ndb.StringProperty()
+    team = ndb.IntegerProperty()
+    lc = ndb.StringProperty()
+    username = ndb.StringProperty()
+    points = ndb.IntegerProperty()    
+
+class Feedback(ndb.Model):
+    timestamp = ndb.DateProperty(auto_now_add=True)
+    con_netid = ndb.StringProperty()
+    point_type = ndb.StringProperty()
+    #recorder = ndb.StringProperty()
+    notes = ndb.TextProperty()
+    
+class Point(ndb.Model):
+    type = ndb.StringProperty()
+    value = ndb.IntegerProperty()
+    
+class TeamFeedback(ndb.Model):
+    timestamp = ndb.DateProperty(auto_now_add=True)
+    team = ndb.IntegerProperty()
+    points_earned = ndb.IntegerProperty()
+    notes = ndb.TextProperty()
+    
+class Team(ndb.Model):
+    team = ndb.IntegerProperty()
+    points = ndb.IntegerProperty()
     
    
 application = webapp2.WSGIApplication([
@@ -779,6 +584,5 @@ application = webapp2.WSGIApplication([
     ('/addteampoints', AddTeamPoints),
     ('/addteam', AddTeam),
     ('/pointvalues', PointValues),
-    ('/utilities', Utilities),
     ('/clearcache', ClearCache),
     ], debug=True)

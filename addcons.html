@@ -19,7 +19,7 @@
             <tr><th>Team: </th>
                 <td><select name='in_team'>
                 {% for team in teamlist %}
-                    <option value='{{ team.team }}'>Team {{ team.team }}</option>
+                    <option value='{{ team.id }}'>Team {{ team.id }}</option>
                 {% endfor %}
                 </select></td></tr>                    
             <tr><th>Lead Con: </th>

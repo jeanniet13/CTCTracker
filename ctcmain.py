@@ -304,7 +304,7 @@ def map_user_to_con(self):
     allcons = get_cons()
     con = False
     for each in allcons:
-        if str.lower(each.username) == str.lower(user.email()):
+        if each.username == str.lower(user.email()):
             con = each
             return con
     return con

@@ -73,8 +73,10 @@ class Feedback(ndb.Model):
     notes = ndb.TextProperty()
     
 class Point(ndb.Model):
+    id = ndb.IntegerProperty()
     type = ndb.StringProperty()
     value = ndb.IntegerProperty()
+    scale = ndb.IntegerProperty()
     
 class TeamFeedback(ndb.Model):
     timestamp = ndb.DateProperty(auto_now_add=True)
@@ -588,21 +590,27 @@ class AddPoints(webapp2.RequestHandler):
             }
             write_page(self, '', '', template_values, 'addpoints.html')
         else:
-            self.response.out.write("Forbidden. Go away.")
+            write_page(self, "Error 401", "<p>Forbidden. Go away.</p>")
+
     def post(self):
         if check_admin(self):
             one = cgi.escape(self.request.get('in_pointtype'))
             two = int(cgi.escape(self.request.get('in_pointvalue')))
+            three = int(cgi.escape(self.request.get('in_pointscale')))
         else:
-            self.response.out.write("Forbidden. Go away.")
+            write_page(self, "Error 401", "<p>Forbidden. Go away.</p>")
         check = False
         pointlist = get_points()
+        pointlist = sorted(pointlist, key=lambda point:point.id)
         for p in pointlist:
             if p.type == one:
                 check = True
                 break
         if check is False:
-            point = Point(type=one, value=two)
+            new_id = pointlist[len(pointlist)-1].id + 1 #find new ID to assign
+            if three != 1: #ensure scale is 1 or 0, default to 0
+                three = 0
+            point = Point(type=one, value=two, id=new_id, scale=three)
             point.put()
             update_points()
             success = True
@@ -755,6 +763,7 @@ class Utilities(webapp2.RequestHandler):
         five = cgi.escape(self.request.get('recalc_teampoints'))
         six = cgi.escape(self.request.get('recalc_conpoints'))
         seven = cgi.escape(self.request.get('clear_memcache_true'))
+        eight = cgi.escape(self.request.get('special_action'))
         something = ''
         if one == 'on':
             clear_feedback_history()
@@ -781,6 +790,15 @@ class Utilities(webapp2.RequestHandler):
                 something += '<p>Memcache cleared.</p>'
             else:
                 something += '<p>Memcache operation failed.</p>'
+        if eight == 'on':
+            #Begin special custom action
+            points = get_points()
+            for point in points:
+                point.scale = 0
+                point.put()
+            update_points()
+            #end custom special action
+            something += '<p>Special Action operation completed.</p>'
         success = True
         template_values = {
             'success':success,
@@ -818,3 +836,11 @@ application = webapp2.WSGIApplication([
     ('/utilities', Utilities),
     ('/clearcache', ClearCache),
     ], debug=True)
+
+# next:
+# Associate feedbacks to point values by actual "id" and not name
+# add function to "reassociate" feedbacks to id based on type
+# delete point_type attr (expando?) ?? (Later? save as backup?)
+# add list to store feedback type count to consultant
+# Add function to repopulate list on recount of feedbacks
+# Add function to calculate consultant score based on internal list

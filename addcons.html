@@ -18,7 +18,7 @@
                 </select></td>        
             <tr><th>Team: </th>
                 <td><select name='in_team'>
-                {% for team in teamlist %}
+                {% for team in teams %}
                     <option value='{{ team.id }}'>Team {{ team.id }}</option>
                 {% endfor %}
                 </select></td></tr>                    

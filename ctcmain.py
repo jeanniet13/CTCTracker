@@ -526,13 +526,13 @@ class AddCons(webapp2.RequestHandler):
     def get(self):
         if check_admin(self):
             positions = [('ctcadmin','CTC Admin'), ('lc','Lead Consultant'), ('srcon','Senior Consultant'), ('con','Consultant'), ('ascon','Associate Consultant')]
-            teamlist = get_teams()
+            teams = get_teams()
             #teamlist = teamlist.order(team.id)
-            teamlist = sorted(teamlist, key=lambda team:team.id)
+            teamls = sorted(teams, key=lambda team:team.id)
             success = False
             template_values = {
                 'positions': positions,
-                'teamlist': teamlist,
+                'teams': teams,
                 'success': success,
             }
             write_page(self, '', '', template_values, 'addcons.html')
@@ -550,28 +550,25 @@ class AddCons(webapp2.RequestHandler):
             write_page(self, "Error 403", "<p>You aren't allowed here. Go away.</p>")
         
         check = False
-        conlist = get_cons()
-        for c in conlist:
-            if c.netid == one:
+        cons = get_cons()
+        for con in cons:
+            if con.netid == one:
                 check = True
                 break
         if check is False:
             con = Consultant(netid=one, name=two, position=three, team=four, lc=five, username=six, points=0)
             con.put()
-            #sleep(3)
             update_cons()
             positions = [('ctcadmin','CTC Admin'), ('lc','Lead Consultant'), ('srcon','Senior Consultant'), ('con','Consultant'), ('ascon','Associate Consultant')]
-            teamlist = get_teams()
-            #teamlist = teamlist.order(team.id)
-            teamlist = sorted(teamlist, key=lambda team:team.id)
+            teams = get_teams()
+            teams = sorted(teams, key=lambda team:team.id)
             success = True
             template_values = {
                 'positions': positions,
-                'teamlist': teamlist,
+                'teams': teams,
                 'success': success,
             }
             write_page(self, '', '', template_values, 'addcons.html')
-            #write_page(self, "Consultant Added", "<p><a href='addcons'>Continue</a></p>")
         else:
             write_page(self, "Error", "<p>This consultant already exists.</p><p><a href='addcons'>Continue</a></p>")
 
@@ -702,8 +699,8 @@ class AddFeedback(webapp2.RequestHandler):
             points = sorted(points, key=lambda point:point.id) #changed sort to ID
             success = False
             template_values = {
-                'conlist': cons,
-                'pointlist': points,
+                'cons': cons,
+                'points': points,
                 'success': success,
             }
             write_page(self, '', '', template_values, 'addfeedback.html')
@@ -735,8 +732,8 @@ class AddFeedback(webapp2.RequestHandler):
             points = get_points()
             points = sorted(points, key=lambda point:point.id) #changed sort to ID
             template_values = {
-                'conlist': cons,
-                'pointlist': points,
+                'cons': cons,
+                'points': points,
                 'success': success,
             }
         write_page(self, '', '', template_values, 'addfeedback.html')      
@@ -788,6 +785,12 @@ class Utilities(webapp2.RequestHandler):
                 something += '<p>Memcache operation failed.</p>'
         if eight == 'on':
             #Begin special custom action
+            feedbacks = get_feedbacks()
+            for feedback in feedbacks:
+                if 'point_type' in feedback._properties:
+                    del feedback._properties['point_type']
+                    feedback.put()
+            update_feedbacks()
             #end custom special action
             something += '<p>Special Action operation completed.</p>'
         success = True
@@ -829,9 +832,6 @@ application = webapp2.WSGIApplication([
     ], debug=True)
 
 # next:
-# Associate feedbacks to point values by actual "id" and not name
-# update all functions to use point ids
-# delete point_type attr?? (Later? save as backup?)
 # add list to store feedback type count to consultant
 # Add function to repopulate list on recount of feedbacks
 # Add function to calculate consultant score based on internal list

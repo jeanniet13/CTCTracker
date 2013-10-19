@@ -171,9 +171,12 @@ def recalculate_team_points():
     teams = get_teams()
     cons = get_cons()
     tlist = list_map(teams) #holds list of teams
-    tpoints = [0 for i in tlist] #0 the list to hold temporary team points
+    tpoints = [[0,0] for i in tlist] #0 the list to hold sums of [points,# cons]
     for con in cons: #add up points from cons
-        tpoints[con.team] += con.points
+        pts = max(con.points,-50) #set cap on negative points at -50
+        if con.position == "ctcadmin" or con.position == "lc":
+            pts = min(pts, 0) #limit lc points to 0 max
+        tpoints[con.team][0] += pts
     for team in teams: #update team entity with new total points
         team.points = tpoints[team.id]
     ndb.put_multi(teams) #mass put teams
@@ -849,7 +852,7 @@ application = webapp2.WSGIApplication([
     ], debug=True)
 
 # next:
-#you added 2 new props to team taht are unused
+# you added 2 new props to team taht are unused
 # scaling score with a magnitude/quantity
 # add list to store feedback type count to consultant
 # Add function to repopulate list on recount of feedbacks

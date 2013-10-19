@@ -73,23 +73,25 @@ class Feedback(ndb.Model):
     point_id = ndb.IntegerProperty()
     #recorder = ndb.StringProperty()
     notes = ndb.TextProperty()
-    
+
 class Point(ndb.Model):
     id = ndb.IntegerProperty()
     type = ndb.StringProperty()
     value = ndb.IntegerProperty()
     scale = ndb.IntegerProperty()
-    
+
 class TeamFeedback(ndb.Model):
     timestamp = ndb.DateProperty(auto_now_add=True)
     team = ndb.IntegerProperty()
     points_earned = ndb.IntegerProperty()
     notes = ndb.TextProperty()
-    
+
 class Team(ndb.Model):
     id = ndb.IntegerProperty()
     points = ndb.IntegerProperty()
-        
+    team_points = ndb.IntegerProperty()
+    size = ndb.IntegerProperty()
+
 #################################################################
 ###                     HELPER FUNCTIONS                      ###
 #################################################################
@@ -166,37 +168,52 @@ def get_position(self):
     return mypos
 
 def recalculate_team_points():
-    clear_team_points()
     teams = get_teams()
     cons = get_cons()
     tlist = list_map(teams) #holds list of teams
     tpoints = [0 for i in tlist] #0 the list to hold temporary team points
-    for con in cons: #add up team points
-        team = map_con_to_team(con)
-        tpoints[team.id] += con.points
+    for con in cons: #add up points from cons
+        tpoints[con.team] += con.points
     for team in teams: #update team entity with new total points
         team.points = tpoints[team.id]
-        team.put()
+    ndb.put_multi(teams) #mass put teams
     update_teams() #refresh cache
 
 def recalculate_con_points():
-    clear_con_points()
     cons = get_cons()
     feedbacks = get_feedbacks()
-    cpoints = [[con.netid, con.points] for con in cons]
+    plist = list_map(get_points())
+    cpoints = [[con.netid, 0] for con in cons]
+    for feedback in feedbacks: #go through feedbacks and sum up points per con in array
+        for i in cpoints:
+            if i[0] == feedback.con_netid: #find appropriate element in list to update
+                i[1] += plist[feedback.point_id].value
+                break
+    j = 0
+    for con in cons: #go through cons and update database
+        con.points = cpoints[j][1]
+        j += 1
+    ndb.put_multi(cons) #mass put cons
+    update_cons() #refresh cache
+
+'''
+def recalculate_con_points():
+    cons = get_cons()
+    feedbacks = get_feedbacks()
+    cpoints = [[con.netid, 0] for con in cons]
     for feedback in feedbacks: #go through feedbacks and sum up points per con in array
         con = map_feedback_to_con(feedback)
         for i in cpoints:
             if i[0] == con.netid: #find appropriate element in list to update
                 i[1] += map_feedback_to_point(feedback)
                 break
+    j = 0
     for con in cons: #go through cons and update database
-        for i in cpoints: #find the correct point value for each con
-            if i[0] == con.netid:
-                con.points = i[1]
-                con.put()
-                break
+        con.points = cpoints[j][1]
+        con.put()
+        j += 1
     update_cons() #refresh cache
+'''
 
 def clear_feedback_history():
     feedbacks = get_feedbacks()
@@ -832,6 +849,8 @@ application = webapp2.WSGIApplication([
     ], debug=True)
 
 # next:
+#you added 2 new props to team taht are unused
+# scaling score with a magnitude/quantity
 # add list to store feedback type count to consultant
 # Add function to repopulate list on recount of feedbacks
 # Add function to calculate consultant score based on internal list

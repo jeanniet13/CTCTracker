@@ -16,10 +16,14 @@
         <tr><th>Feedback</th>
           <td><select name='point_id'>
           {% for pt in points %}
-            <option value='{{ pt.id }}'>{{ pt.type }}</option>
+            <option value='{{ pt.id }}'>{{ pt.type }} {{ pt.value }}</option>
           {% endfor %}
           </select></td>
-        </tr><tr></tr><tr></tr><tr></tr><tr></tr><tr></tr>
+        </tr>
+        <tr><th>Quantity</th>
+          <td>(# of shifts picked-up; # of minutes tardy; leave 0 otherwise)<br>
+          <input type='text' name='size' value='0'></td>
+        </tr> 
         <tr><th>Notes</th>
           <td>(Comments will be seen by consultants)<br>
           <textarea name='notes' cols='20' rows='4'></textarea></td>

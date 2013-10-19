@@ -14,10 +14,10 @@
         <div class='table-border'><table class='boxtable'>
         {% for feedback in feedbacks %}
             {% for point in points %}
-                {% if point.type == feedback.point_type %}
+                {% if point.id == feedback.point_id %}
             <tr>
                 <td>{{ feedback.timestamp }}</td>
-                <td>{{ feedback.point_type }}</td>
+                <td>{{ point.type }}</td>
                 <td>{{ feedback.notes }}</td>
                 <td>{{ point.value }}</td>
             </tr>

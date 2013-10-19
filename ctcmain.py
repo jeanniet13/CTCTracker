@@ -7,7 +7,7 @@ from google.appengine.api import memcache
 from google.appengine.ext import ndb
 from google.appengine.datastore import entity_pb
 
-from time import sleep
+#from time import sleep
 
 import jinja2
 import webapp2
@@ -65,13 +65,14 @@ class Consultant(ndb.Model):
     team = ndb.IntegerProperty()
     lc = ndb.StringProperty()
     username = ndb.StringProperty()
-    points = ndb.IntegerProperty()    
+    points = ndb.IntegerProperty()
 
 class Feedback(ndb.Model):
     timestamp = ndb.DateProperty(auto_now_add=True)
     con_netid = ndb.StringProperty()
     point_id = ndb.IntegerProperty()
     #recorder = ndb.StringProperty()
+    size = ndb.IntegerProperty()
     notes = ndb.TextProperty()
 
 class Point(ndb.Model):
@@ -180,11 +181,14 @@ def recalculate_team_points():
             weight = 0 #dont count LCs toward size of teams
         tpoints[con.team][0] += pts
         tpoints[con.team][1] += weight
+    teams_new = []
     for team in teams: #update team entity with new total points
-        team.points = tpoints[team.id][0]
-        team.size = tpoints[team.id][1]
-    ndb.put_multi(teams) #mass put teams
-    update_teams() #refresh cache
+        if team.points != tpoints[team.id][0] and team.size != tpoints[team.id][1]:
+            team.points = tpoints[team.id][0]
+            team.size = tpoints[team.id][1]
+            teams_new.append(team)
+    ndb.put_multi(teams_new) #mass put teams
+    #update_teams() #refresh cache
 
 def recalculate_team_pointsB(): #needs testing
     teams = get_teams()
@@ -193,10 +197,13 @@ def recalculate_team_pointsB(): #needs testing
     tpoints = [0 for i in tlist] #0 the list to hold sums of points
     for feedback in feedbacks: #add up points from feedbacks
         tpoints[feedback.team] += feedback.points_earned
+    teams_new = []
     for team in teams: #update team entity with new total points
-        team.team_points = tpoints[team.id]
-    ndb.put_multi(teams) #mass put teams
-    update_teams() #refresh cache
+        if team.team_points != tpoints[team.id]:
+            team.team_points = tpoints[team.id]
+            teams_new.append(team)
+    ndb.put_multi(teams_new) #mass put teams
+    #update_teams() #refresh cache
 
 def recalculate_con_points():
     cons = get_cons()
@@ -206,14 +213,21 @@ def recalculate_con_points():
     for feedback in feedbacks: #go through feedbacks and sum up points per con in array
         for i in cpoints:
             if i[0] == feedback.con_netid: #find appropriate element in list to update
-                i[1] += plist[feedback.point_id].value
+                i[1] += calc_points(plist[feedback.point_id].value, plist[feedback.point_id].scale, feedback.size)
                 break
+    cons_new = []
     j = 0
     for con in cons: #go through cons and update database
-        con.points = cpoints[j][1]
+        if con.points != cpoints[j][1]:
+            con.points = cpoints[j][1]
+            cons_new.append(con)
         j += 1
-    ndb.put_multi(cons) #mass put cons
-    update_cons() #refresh cache
+    ndb.put_multi(cons_new) #mass put cons that have been modified
+    #update_cons() #refresh cache
+    
+def calc_points(value, scale, size):
+    points = value + scale*(value*(size - 1))
+    return points
 
 def clear_feedback_history():
     feedbacks = get_feedbacks()
@@ -393,7 +407,7 @@ class MyTeam(webapp2.RequestHandler):
         #members = members.filter(Consultant.team==team.id)
         members = [con for con in members if con.team==team.id]
         #members = members.order(Consultant.netid)        
-        members = sorted(members, key=lambda con:con.netid)
+        members = sorted(members, key=lambda con:con.name)
         template_values = {
             'team':team,
             'members':members,
@@ -435,6 +449,7 @@ class MyCons(webapp2.RequestHandler):
         if check_lc(self) and len(get_cons()) > 0:
             me = map_user_to_con(self)
             allcons = get_cons()
+            allcons = sorted(allcons, key=lambda con:con.name)
             #mycons = allcons.filter(Consultant.lc==me.netid)
             mycons = [con for con in allcons if con.lc==me.netid]
             selected_con = None
@@ -489,7 +504,7 @@ class AllCons(webapp2.RequestHandler):
         if check_lc(self) and len(get_cons()) > 0:
             allcons = get_cons()
             #allcons = allcons.order(-Consultant.points)
-            allcons = sorted(allcons, key=lambda con:-con.points)
+            allcons = sorted(allcons, key=lambda con:con.name)
             selected_con = None
             con_info_box = get_my_feedback(self, selected_con)
             template_values = {
@@ -661,7 +676,6 @@ class AddTeamPoints(webapp2.RequestHandler):
     def get(self):
         if check_lc(self):
             teamlist = get_teams()
-            #teamlist = teamlist.order(team.id)
             teamlist = sorted(teamlist, key=lambda team:team.id)
             teamfeedbacks = get_teamfeedbacks()
             success = False
@@ -680,16 +694,8 @@ class AddTeamPoints(webapp2.RequestHandler):
         teamfeedback = TeamFeedback(team=one,points_earned=two,notes=three)
         teamfeedback.put()
         update_teamfeedbacks()
-        #team = get_teams()
-        #team = team.filter(team.id==one)
-        '''
-        team = [x for x in team if x.id==one]
-        for t in team:
-            t.points += two
-            t.put()
-        update_teams()
-        '''
-        #write_page(self, "Team Points Added", "<p><a href='addteampoints'>Continue</a></p>")  
+        recalculate_team_pointsB()
+
         teamlist = get_teams()
         #teamlist = teamlist.order(team.id)
         teamlist = sorted(teamlist, key=lambda team:team.id)
@@ -707,7 +713,7 @@ class AddFeedback(webapp2.RequestHandler):
     def get(self):
         if check_lc(self):
             cons = get_cons()
-            cons = sorted(cons, key=lambda con:con.netid)
+            cons = sorted(cons, key=lambda con:con.name)
             points = get_points()
             points = sorted(points, key=lambda point:point.id) #changed sort to ID
             success = False
@@ -721,12 +727,16 @@ class AddFeedback(webapp2.RequestHandler):
             write_page(self, "Error 401", "<p>Forbidden. Go away.</p>")  
     def post(self):
         one = cgi.escape(self.request.get('con_netid'))
-        two = cgi.escape(self.request.get('point_id'))
+        two = int(cgi.escape(self.request.get('point_id')))
         three = cgi.escape(self.request.get('notes'))
-        points = get_points()
-        feedback = Feedback(con_netid=one, point_id=two, notes=three)
+        four = int(cgi.escape(self.request.get('size')))
+        feedback = Feedback(con_netid=one, point_id=two, notes=three, size=four)
         feedback.put()
+        update_feedbacks()
+        recalculate_con_points()
         #redo scoring later?
+        '''
+        points = get_points()
         feedback_value = map_feedback_to_point(feedback)
         con = map_netid_to_con(one)
         if con is not False:  
@@ -739,16 +749,18 @@ class AddFeedback(webapp2.RequestHandler):
             update_teams()
             update_feedbacks()
             success = True
-            #reload page (same code as in get())
-            cons = get_cons()
-            cons = sorted(cons, key=lambda con:con.netid)
-            points = get_points()
-            points = sorted(points, key=lambda point:point.id) #changed sort to ID
-            template_values = {
-                'cons': cons,
-                'points': points,
-                'success': success,
-            }
+        '''
+        success = True
+        #reload page (same code as in get())
+        cons = get_cons()
+        cons = sorted(cons, key=lambda con:con.name)
+        points = get_points()
+        points = sorted(points, key=lambda point:point.id) #changed sort to ID
+        template_values = {
+            'cons': cons,
+            'points': points,
+            'success': success,
+        }
         write_page(self, '', '', template_values, 'addfeedback.html')      
 
 class Utilities(webapp2.RequestHandler):
@@ -799,12 +811,11 @@ class Utilities(webapp2.RequestHandler):
                 something += '<p>Memcache operation failed.</p>'
         if eight == 'on':
             #Begin special custom action
-            feedbacks = get_feedbacks()
-            for feedback in feedbacks:
-                if 'point_type' in feedback._properties:
-                    del feedback._properties['point_type']
-                    feedback.put()
-            update_feedbacks()
+            #feedbacks = get_feedbacks()
+            #for feedback in feedbacks:
+            #    feedback.size = 0
+            #ndb.put_multi(feedbacks)
+            #update_feedbacks()
             #end custom special action
             something += '<p>Special Action operation completed.</p>'
         success = True
@@ -846,9 +857,9 @@ application = webapp2.WSGIApplication([
     ], debug=True)
 
 # next:
-# you added 2 new props to team taht are unused
-# scaling score with a magnitude/quantity
-# add list to store feedback type count to consultant
+# scaling score with a magnitude/quantity: update scoring pages to reflect change (done?)
+# Mypoints page is not consistent with the other point display pages.
+# add list to store feedback type count to consultant ??
 # Add function to repopulate list on recount of feedbacks
 # Add function to calculate consultant score based on internal list
 

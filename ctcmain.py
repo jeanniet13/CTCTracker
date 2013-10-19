@@ -174,11 +174,27 @@ def recalculate_team_points():
     tpoints = [[0,0] for i in tlist] #0 the list to hold sums of [points,# cons]
     for con in cons: #add up points from cons
         pts = max(con.points,-50) #set cap on negative points at -50
+        weight = 1
         if con.position == "ctcadmin" or con.position == "lc":
             pts = min(pts, 0) #limit lc points to 0 max
+            weight = 0 #dont count LCs toward size of teams
         tpoints[con.team][0] += pts
+        tpoints[con.team][1] += weight
     for team in teams: #update team entity with new total points
-        team.points = tpoints[team.id]
+        team.points = tpoints[team.id][0]
+        team.size = tpoints[team.id][1]
+    ndb.put_multi(teams) #mass put teams
+    update_teams() #refresh cache
+
+def recalculate_team_pointsB(): #needs testing
+    teams = get_teams()
+    feedbacks = get_teamfeedbacks()
+    tlist = list_map(teams) #holds list of teams
+    tpoints = [0 for i in tlist] #0 the list to hold sums of points
+    for feedback in feedbacks: #add up points from feedbacks
+        tpoints[feedback.team] += feedback.points_earned
+    for team in teams: #update team entity with new total points
+        team.team_points = tpoints[team.id]
     ndb.put_multi(teams) #mass put teams
     update_teams() #refresh cache
 
@@ -198,25 +214,6 @@ def recalculate_con_points():
         j += 1
     ndb.put_multi(cons) #mass put cons
     update_cons() #refresh cache
-
-'''
-def recalculate_con_points():
-    cons = get_cons()
-    feedbacks = get_feedbacks()
-    cpoints = [[con.netid, 0] for con in cons]
-    for feedback in feedbacks: #go through feedbacks and sum up points per con in array
-        con = map_feedback_to_con(feedback)
-        for i in cpoints:
-            if i[0] == con.netid: #find appropriate element in list to update
-                i[1] += map_feedback_to_point(feedback)
-                break
-    j = 0
-    for con in cons: #go through cons and update database
-        con.points = cpoints[j][1]
-        con.put()
-        j += 1
-    update_cons() #refresh cache
-'''
 
 def clear_feedback_history():
     feedbacks = get_feedbacks()
@@ -415,25 +412,21 @@ class PointValues(webapp2.RequestHandler):
     
 class TeamPoints(webapp2.RequestHandler):
     def get(self):
-        allaverages=[]
+        scores=[]
         teams = get_teams()
-        #teams = teams.order(team.id)
         teams = sorted(teams, key=lambda team:team.id)
-        teamfeedbacks = get_teamfeedbacks()
-        teampoints = sum([team.points_earned for team in teamfeedbacks])
-        cons = get_cons()
         for team in teams:
-            totalcons = len([con for con in cons if (con.team==team.id and con.position != 'lc' and con.position != 'ctcadmin')])
-            average = 0
-            if totalcons != 0:
-                average = 100*(team.points)/totalcons
-                average *= 15
-                average /= 100
-                average += teampoints
-            allaverages.append((team.id,average))
+            if team.size != 0:
+                score = 1000*(team.points)/(team.size)
+                score *= 15
+                score /= 1000
+                score += team.team_points
+            else:
+                score = 9001 #this is bad
+            scores.append([team.id,score])
             
         template_values = {
-            'allaverages':allaverages,
+            'scores':scores,
         }
         write_page(self, '', '', template_values, 'teampoints.html')
     
@@ -794,6 +787,7 @@ class Utilities(webapp2.RequestHandler):
             something += '<p>Consultant points cleared.</p>'
         if five == 'on':
             recalculate_team_points()
+            recalculate_team_pointsB()
             something += '<p>Team points recalculated.</p>'
         if six == 'on':
             recalculate_con_points()

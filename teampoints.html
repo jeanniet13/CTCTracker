@@ -8,9 +8,9 @@
             <th>Points</th>
         </tr>
         <tr>
-        {% for average in allaverages %}
-            <th>Team {{ average[0] }}</th>
-            <td>{{ average[1] }}</td>
+        {% for score in scores %}
+            <th>Team {{ score[0] }}</th>
+            <td>{{ score[1] }}</td>
         </tr>
         {% endfor %}        
     </table>

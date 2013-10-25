@@ -183,12 +183,12 @@ def recalculate_team_points():
         tpoints[con.team][1] += weight
     teams_new = []
     for team in teams: #update team entity with new total points
-        if team.points != tpoints[team.id][0] and team.size != tpoints[team.id][1]:
+        if team.points != tpoints[team.id][0] or team.size != tpoints[team.id][1]:
             team.points = tpoints[team.id][0]
             team.size = tpoints[team.id][1]
             teams_new.append(team)
     ndb.put_multi(teams_new) #mass put teams
-    #update_teams() #refresh cache
+    update_teams() #refresh cache
 
 def recalculate_team_pointsB(): #needs testing
     teams = get_teams()
@@ -203,7 +203,7 @@ def recalculate_team_pointsB(): #needs testing
             team.team_points = tpoints[team.id]
             teams_new.append(team)
     ndb.put_multi(teams_new) #mass put teams
-    #update_teams() #refresh cache
+    update_teams() #refresh cache
 
 def recalculate_con_points():
     cons = get_cons()
@@ -223,7 +223,7 @@ def recalculate_con_points():
             cons_new.append(con)
         j += 1
     ndb.put_multi(cons_new) #mass put cons that have been modified
-    #update_cons() #refresh cache
+    update_cons() #refresh cache
     
 def calc_points(value, scale, size):
     points = value + scale*(value*(size - 1))
@@ -280,7 +280,7 @@ def get_my_feedback(self,con):
         something += "<td>" + str(feedback.timestamp) + "</td>"
         something += "<td>" + point.type + "</td>"
         something += "<td>" + feedback.notes + "</td>"
-        something += "<td>" + str(point.value) + "</td>"
+        something += "<td>" + str(calc_points(point.value, point.scale, feedback.size)) + "</td>"
         something += "</tr>"
     return something
  
@@ -734,6 +734,7 @@ class AddFeedback(webapp2.RequestHandler):
         feedback.put()
         update_feedbacks()
         recalculate_con_points()
+        recalculate_team_points()
         #redo scoring later?
         '''
         points = get_points()

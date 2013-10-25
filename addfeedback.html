@@ -16,7 +16,7 @@
         <tr><th>Feedback</th>
           <td><select name='point_id'>
           {% for pt in points %}
-            <option value='{{ pt.id }}'>{{ pt.type }} {{ pt.value }}</option>
+            <option value='{{ pt.id }}'>{{ pt.type }} ({{ pt.value }} pts)</option>
           {% endfor %}
           </select></td>
         </tr>

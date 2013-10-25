@@ -19,7 +19,7 @@
                 <td>{{ feedback.timestamp }}</td>
                 <td>{{ point.type }}</td>
                 <td>{{ feedback.notes }}</td>
-                <td>{{ point.value }}</td>
+                <td>{{ point.value + point.value*(point.scale*(feedback.size -1)) }}</td>
             </tr>
                 {% endif %}
             {% endfor %}

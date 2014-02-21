@@ -1,0 +1,16 @@
+value,scale,type,id,key
+5,0,Demonstration of Knowledge,14,4993981813358592
+10,0,(+) Customer Service,5,5118776383111168
+-5,0,(-) Customer Service,6,5144752345317376
+5,0,(+) Workplace Etiquette,7,5197666342404096
+-5,0,Lack of Knowledge,15,5222955109842944
+0,0,Missed Shift,13,5342114682503168
+5,0,Helping a Con,2,5655612935372800
+-5,0,(-) Workplace Etiquette,8,5707702298738688
+-5,0,Incomplete Checklist,4,5812155903377408
+10,0,Emergency Availability,9,5865619656278016
+-5,0,Botched Shift Trade,12,5905064635924480
+2,1,Shift Pickups,10,5906765442973696
+10,0,Positive Feedback,1,6192449487634432
+-5,0,Bad Ticket,3,6296903092273152
+-1,1,Tardiness,11,6401356696911872

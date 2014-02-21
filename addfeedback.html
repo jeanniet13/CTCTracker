@@ -3,9 +3,19 @@
 {% block Content %}
     {% if success == true %}
     <p>Feedback added.</p>
+    <p>{{ output }}</p>
     {% endif %}
-    <form id='inputform' method='post'>
+    Use this section if you have a file to upload.
+    <form id='inputform' enctype='multipart/form-data' method='post'>
       <table id='input'>
+        <tr><th>Upload CSV</th>
+          <td>Each line must be in format "netid,feedbackid,quantity,notes"<br>
+          See Point Values page for feedbackid.<br>
+          <input type='file' name='csvimport'/></td></tr>
+      </table>
+      <br>
+      Use this section if you have no file to upload.
+      <table id='input'>        
         <tr><th>Consultant</th>
           <td><select name='con_netid'>
           {% for con in cons %}

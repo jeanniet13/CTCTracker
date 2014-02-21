@@ -6,8 +6,7 @@ threadsafe: true
 
 handlers:
 - url: /stylesheets
-  static_dir: stylesheets
-  
+  static_dir: stylesheets  
 - url: /.*
   script: ctcmain.application
   login: required
@@ -20,3 +19,4 @@ libraries:
   
 builtins:
 - appstats: on
+- remote_api: on

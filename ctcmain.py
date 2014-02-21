@@ -1,6 +1,7 @@
 import os
 import urllib
 import cgi
+import csv
 
 from google.appengine.api import users
 from google.appengine.api import memcache
@@ -209,11 +210,22 @@ def recalculate_con_points():
     cons = get_cons()
     feedbacks = get_feedbacks()
     plist = list_map(get_points())
-    cpoints = [[con.netid, 0] for con in cons]
+    cpoints = [[con.netid, 0, 0] for con in cons]
     for feedback in feedbacks: #go through feedbacks and sum up points per con in array
         for i in cpoints:
             if i[0] == feedback.con_netid: #find appropriate element in list to update
-                i[1] += calc_points(plist[feedback.point_id].value, plist[feedback.point_id].scale, feedback.size)
+                if feedback.point_id == 10:
+                    if i[2]+feedback.size < 21:
+                        i[1] += calc_points(plist[feedback.point_id].value, plist[feedback.point_id].scale, feedback.size)
+                    elif i[2] > 21:
+                        i[1] += calc_points(plist[feedback.point_id].value, plist[feedback.point_id].scale, feedback.size)/2                        
+                    else:
+                        fullpoints = 20-i[2]
+                        i[1] += calc_points(plist[feedback.point_id].value, plist[feedback.point_id].scale, fullpoints)
+                        i[1] += calc_points(plist[feedback.point_id].value, plist[feedback.point_id].scale, feedback.size-fullpoints)/2
+                    i[2] += feedback.size
+                else:
+                    i[1] += calc_points(plist[feedback.point_id].value, plist[feedback.point_id].scale, feedback.size)
                 break
     cons_new = []
     j = 0
@@ -342,13 +354,7 @@ def map_user_to_con(self):
     
 def check_lc(self):
     position = get_position(self)
-    if check_trainer(self) or position == 'lc':
-        return True
-    return False
-    
-def check_trainer(self):
-    position = get_position(self)
-    if check_admin(self) or position == 'trainer':
+    if check_admin(self) or position == 'lc':
         return True
     return False
 
@@ -521,6 +527,7 @@ class AllCons(webapp2.RequestHandler):
     def post(self):
         selected_con = cgi.escape(self.request.get('allconselect'))
         allcons = get_cons()
+        allcons = sorted(allcons, key=lambda con:con.name)
         if selected_con != 'None':
             mapped_con = map_name_to_con(selected_con)            
             con_info_box = get_my_feedback(self, mapped_con)
@@ -626,9 +633,12 @@ class AddPoints(webapp2.RequestHandler):
                 check = True
                 break
         if check is False:
-            new_id = pointlist[len(pointlist)-1].id + 1 #find new ID to assign
-            if three != 1: #ensure scale is 1 or 0, default to 0
-                three = 0
+            if pointlist:
+                new_id = pointlist[len(pointlist)-1].id + 1 #find new ID to assign
+                if three != 1: #ensure scale is 1 or 0, default to 0
+                    three = 0
+            else:
+                new_id=0
             point = Point(type=one, value=two, id=new_id, scale=three)
             point.put()
             update_points()
@@ -678,6 +688,7 @@ class AddTeamPoints(webapp2.RequestHandler):
             teamlist = get_teams()
             teamlist = sorted(teamlist, key=lambda team:team.id)
             teamfeedbacks = get_teamfeedbacks()
+            teamfeedbacks = sorted(teamfeedbacks, key=lambda teamfeedback:teamfeedback.timestamp)
             success = False
             template_values = {
                 'teamlist': teamlist,
@@ -701,6 +712,7 @@ class AddTeamPoints(webapp2.RequestHandler):
         teamlist = sorted(teamlist, key=lambda team:team.id)
         teamfeedbacks = get_teamfeedbacks()
         #update_teamfeedbacks()
+        teamfeedbacks = sorted(teamfeedbacks, key=lambda teamfeedback:teamfeedback.timestamp)
         success = True
         template_values = {
             'teamlist': teamlist,
@@ -726,31 +738,27 @@ class AddFeedback(webapp2.RequestHandler):
         else:
             write_page(self, "Error 401", "<p>Forbidden. Go away.</p>")  
     def post(self):
+        zero = self.request.get('csvimport')
         one = cgi.escape(self.request.get('con_netid'))
         two = int(cgi.escape(self.request.get('point_id')))
         three = cgi.escape(self.request.get('notes'))
         four = int(cgi.escape(self.request.get('size')))
-        feedback = Feedback(con_netid=one, point_id=two, notes=three, size=four)
-        feedback.put()
-        update_feedbacks()
-        recalculate_con_points()
-        recalculate_team_points()
+        output = ''
+        if zero:            
+            reader = csv.reader(zero.splitlines())            
+            for row in reader:  
+                #output += row[0] + " " + row[1] + " " + row[2] + " " + ''.join(row[3:])
+                #line = row.split(",",3);
+                feedback = Feedback(con_netid=row[0], point_id=int(row[1]), notes=''.join(row[3:]), size=int(row[2]))
+                feedback.put()
+                #output += "<br>"
+        else:
+            feedback = Feedback(con_netid=one, point_id=two, notes=three, size=four)
+            feedback.put()
+        #update_feedbacks()
+        #recalculate_con_points()
+        #recalculate_team_points()
         #redo scoring later?
-        '''
-        points = get_points()
-        feedback_value = map_feedback_to_point(feedback)
-        con = map_netid_to_con(one)
-        if con is not False:  
-            con.points += feedback_value
-            con.put()
-            team = map_con_to_team(con)
-            team.points += feedback_value
-            team.put()
-            update_cons()
-            update_teams()
-            update_feedbacks()
-            success = True
-        '''
         success = True
         #reload page (same code as in get())
         cons = get_cons()
@@ -761,6 +769,7 @@ class AddFeedback(webapp2.RequestHandler):
             'cons': cons,
             'points': points,
             'success': success,
+            'output': output
         }
         write_page(self, '', '', template_values, 'addfeedback.html')      
 
@@ -825,8 +834,7 @@ class Utilities(webapp2.RequestHandler):
             'Success_Message':something,
         }
         write_page(self, '', '', template_values, 'utilities.html')
-
-            
+        
 class ClearCache(webapp2.RequestHandler):
     def get(self):
         if check_admin(self):

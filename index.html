@@ -16,14 +16,11 @@
         <li><a href = 'myteam'>My Team</a></li>
         <li><a href = 'pointvalues'>Point Values</a></li>
 
-       {% if user.position == 'lc' or user.position == 'ctcadmin' or user.position == 'trainer' or admin %}
+       {% if user.position == 'lc' or user.position == 'ctcadmin' or admin %}
             <h3> LC Tools </h3> 
             <li><a href='mycons'>My Consultants</a></li>
             <li><a href='allfeedback'>All Feedback</a></li>
             <li><a href='conrank'>Consultant Standings</a></li>
-       {% endif %}
-       {% if user.position == 'trainer' or user.position == 'ctcadmin' or admin %}
-            <h3> Trainer Tools </h3>
             <li><a href='addteampoints'>Add Team Points</a></li>
             <li><a href='addfeedback'>Add Feedback</a></li>
        {% endif %}

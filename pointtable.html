@@ -4,13 +4,14 @@
 {% block Content %}
     <table class='boxtable'>
         <thead>
+            <td>Feedback ID</td>
             <td>Type of Feedback</td>
             <td>Point Value</td>
         </thead>
     </table>
     <div class='table-border'><table class='boxtable'>
     {% for point in points %}    
-        <tr><td>{{ point.type }}</td><td>{{ point.value }}</td></tr>
+        <tr><td>{{ point.id }}</td><td>{{ point.type }}</td><td>{{ point.value }}</td></tr>
     {% endfor %}
     </table></div>
 {% endblock %}

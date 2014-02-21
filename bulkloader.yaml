@@ -1,0 +1,318 @@
+# If you have module(s) with your model classes, add them here. Also
+# change the kind properties to model_class.
+python_preamble:
+- import: base64
+- import: re
+- import: google.appengine.ext.bulkload.transform
+- import: google.appengine.ext.bulkload.bulkloader_wizard
+- import: google.appengine.ext.db
+- import: google.appengine.api.datastore
+- import: google.appengine.api.users
+
+transformers:
+
+- kind: Consultant
+  connector: csv
+  connector_options:
+    encoding: utf-8
+    columns: from_header
+  property_map:
+    - property: __key__
+      external_name: key
+      export_transform: transform.key_id_or_name_as_string
+
+    - property: lc
+      external_name: lc
+      # Type: String Stats: 62 properties of this type in this kind.
+
+    - property: name
+      external_name: name
+      # Type: String Stats: 62 properties of this type in this kind.
+
+    - property: netid
+      external_name: netid
+      # Type: String Stats: 62 properties of this type in this kind.
+
+    - property: points
+      external_name: points
+      # Type: Integer Stats: 62 properties of this type in this kind.
+      import_transform: transform.none_if_empty(int)
+
+    - property: position
+      external_name: position
+      # Type: String Stats: 62 properties of this type in this kind.
+
+    - property: team
+      external_name: team
+      # Type: Integer Stats: 62 properties of this type in this kind.
+      import_transform: transform.none_if_empty(int)
+
+    - property: username
+      external_name: username
+      # Type: String Stats: 62 properties of this type in this kind.
+
+
+- kind: Feedback
+  connector: csv
+  connector_options:
+    encoding: utf-8
+    columns: from_header
+  property_map:
+    - property: __key__
+      external_name: key
+      export_transform: transform.key_id_or_name_as_string
+
+    - property: con_netid
+      external_name: con_netid
+      # Type: String Stats: 610 properties of this type in this kind.
+
+    - property: notes
+      external_name: notes
+      # Type: Text Stats: 610 properties of this type in this kind.
+      import_transform: db.Text
+
+    - property: point_id
+      external_name: point_id
+      # Type: Integer Stats: 610 properties of this type in this kind.
+      import_transform: transform.none_if_empty(int)
+
+    - property: size
+      external_name: size
+      # Type: Integer Stats: 610 properties of this type in this kind.
+      import_transform: transform.none_if_empty(int)
+
+    - property: timestamp
+      external_name: timestamp
+      # Type: Date/Time Stats: 610 properties of this type in this kind.
+      import_transform: transform.import_date_time('%Y-%m-%dT%H:%M:%S')
+      export_transform: transform.export_date_time('%Y-%m-%dT%H:%M:%S')
+
+
+- kind: Point
+  connector: csv
+  connector_options:
+    encoding: utf-8
+    columns: from_header
+  property_map:
+    - property: __key__
+      external_name: key
+      export_transform: transform.key_id_or_name_as_string
+
+    - property: id
+      external_name: id
+      # Type: Integer Stats: 15 properties of this type in this kind.
+      import_transform: transform.none_if_empty(int)
+
+    - property: scale
+      external_name: scale
+      # Type: Integer Stats: 15 properties of this type in this kind.
+      import_transform: transform.none_if_empty(int)
+
+    - property: type
+      external_name: type
+      # Type: String Stats: 15 properties of this type in this kind.
+
+    - property: value
+      external_name: value
+      # Type: Integer Stats: 15 properties of this type in this kind.
+      import_transform: transform.none_if_empty(int)
+
+
+- kind: TeamFeedback
+  connector: csv
+  connector_options:
+    encoding: utf-8
+    columns: from_header
+  property_map:
+    - property: __key__
+      external_name: key
+      export_transform: transform.key_id_or_name_as_string
+
+    - property: notes
+      external_name: notes
+      # Type: Text Stats: 12 properties of this type in this kind.
+      import_transform: db.Text
+
+    - property: points_earned
+      external_name: points_earned
+      # Type: Integer Stats: 12 properties of this type in this kind.
+      import_transform: transform.none_if_empty(int)
+
+    - property: team
+      external_name: team
+      # Type: Integer Stats: 12 properties of this type in this kind.
+      import_transform: transform.none_if_empty(int)
+
+    - property: timestamp
+      external_name: timestamp
+      # Type: Date/Time Stats: 12 properties of this type in this kind.
+      import_transform: transform.import_date_time('%Y-%m-%dT%H:%M:%S')
+      export_transform: transform.export_date_time('%Y-%m-%dT%H:%M:%S')
+
+
+- kind: Team
+  connector: csv
+  connector_options:
+    encoding: utf-8
+    columns: from_header
+  property_map:
+    - property: __key__
+      external_name: key
+      export_transform: transform.key_id_or_name_as_string
+
+    - property: id
+      external_name: id
+      # Type: Integer Stats: 4 properties of this type in this kind.
+      import_transform: transform.none_if_empty(int)
+
+    - property: points
+      external_name: points
+      # Type: Integer Stats: 4 properties of this type in this kind.
+      import_transform: transform.none_if_empty(int)
+
+    - property: size
+      external_name: size
+      # Type: Integer Stats: 4 properties of this type in this kind.
+      import_transform: transform.none_if_empty(int)
+
+    - property: team_points
+      external_name: team_points
+      # Type: Integer Stats: 4 properties of this type in this kind.
+      import_transform: transform.none_if_empty(int)
+
+
+- kind: _AE_Backup_Information_Kind_Files
+  connector: csv
+  connector_options:
+    encoding: utf-8
+    columns: from_header
+  property_map:
+    - property: __key__
+      external_name: key
+      export_transform: transform.key_id_or_name_as_string
+
+    - property: files
+      external_name: files
+      # Type: String Stats: 34 properties of this type in this kind.
+
+
+- kind: _AE_Backup_Information_Kind_Type_Info
+  connector: csv
+  connector_options:
+    encoding: utf-8
+    columns: from_header
+  property_map:
+    - property: __key__
+      external_name: key
+      export_transform: transform.key_id_or_name_as_string
+
+    - property: entity_type_info
+      external_name: entity_type_info
+      # Type: Text Stats: 34 properties of this type in this kind.
+      import_transform: db.Text
+
+    - property: is_partial
+      external_name: is_partial
+      # Type: Boolean Stats: 34 properties of this type in this kind.
+      import_transform: transform.regexp_bool('true', re.IGNORECASE)
+
+
+- kind: _AE_Backup_Information
+  connector: csv
+  connector_options:
+    encoding: utf-8
+    columns: from_header
+  property_map:
+    - property: __key__
+      external_name: key
+      export_transform: transform.key_id_or_name_as_string
+
+    - property: complete_time
+      external_name: complete_time
+      # Type: Date/Time Stats: 5 properties of this type in this kind.
+      import_transform: transform.import_date_time('%Y-%m-%dT%H:%M:%S')
+      export_transform: transform.export_date_time('%Y-%m-%dT%H:%M:%S')
+
+    - property: completed_jobs
+      external_name: completed_jobs
+      # Type: String Stats: 20 properties of this type in this kind.
+
+    - property: filesystem
+      external_name: filesystem
+      # Type: String Stats: 5 properties of this type in this kind.
+
+    - property: kinds
+      external_name: kinds
+      # Type: String Stats: 20 properties of this type in this kind.
+
+    - property: name
+      external_name: name
+      # Type: String Stats: 5 properties of this type in this kind.
+
+    - property: namespaces
+      external_name: namespaces
+      # Type: String Stats: 1 properties of this type in this kind.
+
+    - property: start_time
+      external_name: start_time
+      # Type: Date/Time Stats: 5 properties of this type in this kind.
+      import_transform: transform.import_date_time('%Y-%m-%dT%H:%M:%S')
+      export_transform: transform.export_date_time('%Y-%m-%dT%H:%M:%S')
+
+
+- kind: _AE_DatastoreAdmin_Operation
+  connector: csv
+  connector_options:
+    encoding: utf-8
+    columns: from_header
+  property_map:
+    - property: __key__
+      external_name: key
+      export_transform: transform.key_id_or_name_as_string
+
+    - property: active_jobs
+      external_name: active_jobs
+      # Type: Integer Stats: 5 properties of this type in this kind.
+      import_transform: transform.none_if_empty(int)
+
+    - property: completed_jobs
+      external_name: completed_jobs
+      # Type: Integer Stats: 5 properties of this type in this kind.
+      import_transform: transform.none_if_empty(int)
+
+    - property: description
+      external_name: description
+      # Type: Text Stats: 5 properties of this type in this kind.
+      import_transform: db.Text
+
+    - property: last_updated
+      external_name: last_updated
+      # Type: Date/Time Stats: 5 properties of this type in this kind.
+      import_transform: transform.import_date_time('%Y-%m-%dT%H:%M:%S')
+      export_transform: transform.export_date_time('%Y-%m-%dT%H:%M:%S')
+
+    - property: status
+      external_name: status
+      # Type: String Stats: 5 properties of this type in this kind.
+
+    - property: status_info
+      external_name: status_info
+      # Type: String Stats: 5 properties of this type in this kind.
+
+
+- kind: _GAE_MR_TaskPayload
+  connector: csv
+  connector_options:
+    encoding: utf-8
+    columns: from_header
+  property_map:
+    - property: __key__
+      external_name: key
+      export_transform: transform.key_id_or_name_as_string
+
+    - property: payload
+      external_name: payload
+      # Type: Blob Stats: 3 properties of this type in this kind.
+      import_transform: transform.blobproperty_from_base64
+      export_transform: base64.b64encode
+
